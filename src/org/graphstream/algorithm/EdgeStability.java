@@ -36,9 +36,20 @@ import org.graphstream.stream.SinkAdapter;
  * appearances, cumulated age, average age, volatility).
  * 
  * Each value is updated when required and stored to a dedicated edge attribute
- * field.
+ * field. All fields are prefixed by "stability." :
+ * <ul>
+ * <li><i>stability.age</i>: stores the current age of the link</li>
+ * <li><i>stability.cumulated_age</i>: stores the cumulated age of the link</li>
+ * <li><i>stability.average_age</i>: stores the average age of the link</li>
+ * <li><i>stability.appearances</i>: stores the number of appearances of the
+ * link</li>
+ * <li><i>stability.volatility</i>: stores the volatility of the link</li>
+ * </ul>
  * 
- * @reference Thèse de Yoann
+ * @reference Pigné, Y. <b>
+ *            "Modélisation et traitement décentralisé des graphes dynamiques.
+ *            Application aux réseaux mobiles ad hoc", 
+ *            <i>PhD Thesis</i>, Université du Havre, 2008.
  * 
  * @author Guillaume-Jean Herbiet
  * 
@@ -90,59 +101,54 @@ public class EdgeStability extends SinkAdapter implements Algorithm {
 
 	@Override
 	public void compute() {
-		
+
 	}
 
 	public void stepBegins(String sourceId, long timeId, double step) {
 
-		if (graph.getId().equals(sourceId)) {
-			/*
-			 * Increase the age and cumulated age of all "on" links
-			 */
-			for (String edgeId : age.keySet()) {
-				age.put(edgeId, age.get(edgeId) + 1.0);
-				cumulatedAge.put(edgeId, cumulatedAge.get(edgeId) + 1.0);
-				updateEdgeStability(graph.getEdge(edgeId));
-			}
+		/*
+		 * Increase the age and cumulated age of all "on" links
+		 */
+		for (String edgeId : age.keySet()) {
+			age.put(edgeId, age.get(edgeId) + 1.0);
+			cumulatedAge.put(edgeId, cumulatedAge.get(edgeId) + 1.0);
+			updateEdgeStability(graph.getEdge(edgeId));
 		}
 	}
 
 	public void edgeAdded(String sourceId, long timeId, String edgeId,
 			String fromNodeId, String toNodeId, boolean directed) {
 
-		if (graph.getId().equals(sourceId)) {
-			/*
-			 * Reset the age of this fresh age
-			 */
-			age.put(edgeId, 0.0);
+		/*
+		 * Reset the age of this fresh age
+		 */
+		age.put(edgeId, 0.0);
 
-			/*
-			 * Initiate a cumulated age entry for this edge if first appearing
-			 */
-			if (!cumulatedAge.containsKey(edgeId)) {
-				cumulatedAge.put(edgeId, 0.0);
-			}
-
-			/*
-			 * Initiate or increment the number of appearances for this edge
-			 */
-			if (!appearances.containsKey(edgeId)) {
-				appearances.put(edgeId, 1.0);
-			} else {
-				appearances.put(edgeId, appearances.get(edgeId) + 1.0);
-			}
-			updateEdgeStability(graph.getEdge(edgeId));
+		/*
+		 * Initiate a cumulated age entry for this edge if first appearing
+		 */
+		if (!cumulatedAge.containsKey(edgeId)) {
+			cumulatedAge.put(edgeId, 0.0);
 		}
+
+		/*
+		 * Initiate or increment the number of appearances for this edge
+		 */
+		if (!appearances.containsKey(edgeId)) {
+			appearances.put(edgeId, 1.0);
+		} else {
+			appearances.put(edgeId, appearances.get(edgeId) + 1.0);
+		}
+		updateEdgeStability(graph.getEdge(edgeId));
 	}
 
 	public void edgeRemoved(String sourceId, long timeId, String edgeId) {
 
-		if (graph.getId().equals(sourceId)) {
-			/*
-			 * Delete the age entry for this edge
-			 */
-			age.remove(edgeId);
-		}
+		/*
+		 * Delete the age entry for this edge
+		 */
+		age.remove(edgeId);
+
 	}
 
 	protected void updateEdgeStability(Edge e) {
