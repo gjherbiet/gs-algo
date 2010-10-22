@@ -90,7 +90,6 @@ public class EdgeStability extends SinkAdapter implements Algorithm {
 	 * @see
 	 * org.graphstream.algorithm.Algorithm#init(org.graphstream.graph.Graph)
 	 */
-	@Override
 	public void init(Graph graph) {
 		this.graph = graph;
 
@@ -99,7 +98,6 @@ public class EdgeStability extends SinkAdapter implements Algorithm {
 		appearances = new HashMap<String, Double>();
 	}
 
-	@Override
 	public void compute() {
 
 	}
