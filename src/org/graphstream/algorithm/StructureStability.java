@@ -128,6 +128,8 @@ public class StructureStability extends SinkAdapter implements Algorithm {
 	public void compute() {
 
 		if (graphChanged) {
+			
+			stability.clear();
 
 			/*
 			 * Iterate over the edges of the graph
@@ -150,8 +152,8 @@ public class StructureStability extends SinkAdapter implements Algorithm {
 				 */
 				if (u.hasAttribute(structureMarker)
 						&& v.hasAttribute(structureMarker)
-						&& u.getAttribute(structureMarker) == v
-								.getAttribute(structureMarker)) {
+						&& u.<Object>getAttribute(structureMarker) == v
+								.<Object>getAttribute(structureMarker)) {
 
 					// Common structure
 					Object structure = u.getAttribute(structureMarker);
