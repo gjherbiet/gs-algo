@@ -60,6 +60,12 @@ public class CommunityDistribution extends CommunityMeasure {
 	 * Standard deviation of the size of currently generated communities.
 	 */
 	protected float stdevSize = 0;
+	
+	/**
+	 * Ignore communities smaller than this given threshold.
+	 * This is useful when there a lot of isolated nodes.
+	 */
+	protected int threshold = 0;
 
 	/**
 	 * New size distribution measure using the specified marker as attribute
@@ -71,6 +77,13 @@ public class CommunityDistribution extends CommunityMeasure {
 	public CommunityDistribution(String marker) {
 		super(marker);
 	}
+	
+	/**
+	 * Sets the threshold size for communities to be accounted.
+	 */
+	public void setMinimunCommunitySize(int threshold) {
+		this.threshold = threshold;
+	}
 
 	@Override
 	/**
@@ -81,7 +94,7 @@ public class CommunityDistribution extends CommunityMeasure {
 	public void compute() {
 		if (graphChanged) {
 			// Default measure is the number of communities
-			M = (float) communities.size();
+			M = (float) number();
 
 			// Update the smallest/biggest community
 			// and creates the size distribution
@@ -94,15 +107,17 @@ public class CommunityDistribution extends CommunityMeasure {
 			StandardDeviation stdev = new StandardDeviation();
 
 			for (Object c : communities.keySet()) {
-				distribution[k++] = (communities.get(c)).size();
+				if ((communities.get(c)).size() > threshold) {
+					distribution[k++] = (communities.get(c)).size();
 
-				if ((communities.get(c)).size() > maxSize) {
-					biggestCommunity = c;
-					maxSize = (communities.get(c)).size();
-				}
-				if ((communities.get(c)).size() < minSize) {
-					smallestCommunity = c;
-					minSize = (communities.get(c)).size();
+					if ((communities.get(c)).size() > maxSize) {
+						biggestCommunity = c;
+						maxSize = (communities.get(c)).size();
+					}
+					if ((communities.get(c)).size() < minSize) {
+						smallestCommunity = c;
+						minSize = (communities.get(c)).size();
+					}
 				}
 			}
 
@@ -117,10 +132,21 @@ public class CommunityDistribution extends CommunityMeasure {
 	/**
 	 * Get the number of communities
 	 * 
-	 * @return an int representing the current number of communities
+	 * @return an int representing the current number of communities whose size
+	 * is greater than the threshold
 	 */
 	public int number() {
-		return (int) M;
+		int n = 0;
+		
+		if (threshold == 0) {
+			n = communities.size();
+		}
+		
+		for (Object c : communities.keySet()) {
+			if ((communities.get(c)).size() > threshold)
+				n++;
+		}
+		return n;
 	}
 
 	/**
