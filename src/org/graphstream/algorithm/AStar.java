@@ -1,24 +1,31 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm;
 
@@ -45,43 +52,110 @@ import org.graphstream.graph.Path;
  * <p>
  * In this A* implementation, the various costs (often called g, h and f) are
  * given by a {@link org.graphstream.algorithm.AStar.Costs} class. This class
- * must provide a way to compute :
+ * must provide a way to compute:
  * <ul>
- * <li>The cost of moving from a node to another, often called g ;</li>
+ * <li>The cost of moving from a node to another, often called g;</li>
  * <li>The estimated cost from a node to the destination, the heuristic, often
- * noted h ;</li>
+ * noted h;</li>
  * <li>f is the sum of g and h and is computed automatically.</li>
  * </ul>
  * </p>
  * 
  * <p>
  * By default the {@link org.graphstream.algorithm.AStar.Costs} implementation
- * used uses an heuristic that returns 0 for any heuristic. This makes A* an
+ * used uses a heuristic that returns 0 for any heuristic. This makes A* an
  * equivalent of the Dijkstra algorithm, but also makes it far less efficient.
  * </p>
  * 
- * <p>
- * The basic usage of this algorithm is as follows :
+ * <h2>Usage</h2>
  * 
+ * <p>The basic usage is to create an instance of A*, then to ask it to compute
+ * from a shortest path from one target to one destination, and finally to ask
+ * for that path:
+ * </p>
  * <pre>
- * AStart astar = new AStar(graph);
- * astar.compute(&quot;A&quot;, &quot;Z&quot;); // with A and Z node identifiers in the graph.
+ * AStart astar = new AStar(graph); 
+ * astar.compute("A", "Z"); // with A and Z node identifiers in the graph. 
+ * Path path = astar.getShortestPath();
+ * </pre>
+ * <p>
+ * The advantage of A* is that it can consider any cost function to drive the
+ * search. You can create your own cost functions implementing the
+ * {@link org.graphstream.algorithm.AStar.Costs} interface.
+ * </p>
+ * <p>
+ * You can also test the default "distance" cost function on a graph that has
+ * "x" and "y" values. You specify the {@link Costs} function before calling the
+ * {@link #compute(String,String)} method:
+ * </p>
+ * <pre>
+ * AStart astar = new AStar(graph); 
+ * astar.setCosts(new DistanceCosts());
+ * astar.compute("A", "Z"); 
  * Path path = astar.getShortestPath();
  * </pre>
  * 
- * </p>
+ * <h2>Example</h2>
  * 
- * <p>
- * This algorithm uses the <i>std-algo-1.0</i> algorithm's standard.
- * </p>
+ * <pre>
+ * import java.io.IOException;
+ * import java.io.StringReader;
+ * 
+ * import org.graphstream.algorithm.AStar;
+ * import org.graphstream.algorithm.AStar.DistanceCosts;
+ * import org.graphstream.graph.Graph;
+ * import org.graphstream.graph.implementations.DefaultGraph;
+ * import org.graphstream.stream.file.FileSourceDGS;
+ * 
+ * public class AStarTest {
+ * 	
+ * 	//     B-(1)-C
+ * 	//    /       \
+ * 	//  (1)       (10)
+ * 	//  /           \
+ * 	// A             F
+ * 	//  \           /
+ * 	//  (1)       (1)
+ * 	//    \       /
+ * 	//     D-(1)-E
+ * 	static String my_graph = 
+ * 		"DGS004\n" 
+ * 		+ "my 0 0\n" 
+ * 		+ "an A xy: 0,1\n" 
+ * 		+ "an B xy: 1,2\n"
+ * 		+ "an C xy: 2,2\n"
+ * 		+ "an D xy: 1,0\n"
+ * 		+ "an E xy: 2,0\n"
+ * 		+ "an F xy: 3,1\n"
+ * 		+ "ae AB A B weight:1 \n"
+ * 		+ "ae AD A D weight:1 \n"
+ * 		+ "ae BC B C weight:1 \n"
+ * 		+ "ae CF C F weight:10 \n"
+ * 		+ "ae DE D E weight:1 \n"
+ * 		+ "ae EF E F weight:1 \n"
+ * 		;
+ * 
+ * 	public static void main(String[] args) throws IOException {
+ * 		Graph graph = new DefaultGraph("A* Test");
+ * 		StringReader reader = new StringReader(my_graph);
+ * 
+ * 		FileSourceDGS source = new FileSourceDGS();
+ * 		source.addSink(graph);
+ * 		source.readAll(reader);
+ * 
+ * 		AStar astar = new AStar(graph);
+ * 		//astar.setCosts(new DistanceCosts());
+ * 		astar.compute("C", "F");
+ * 
+ * 		System.out.println(astar.getShortestPath());
+ * 	}
+ * }
+ * </pre>
+ *
  * 
  * @complexity The complexity of A* depends on the heuristic.
- * @author Antoine Dutot
- * @author Yoann Pigné
  */
 public class AStar implements Algorithm {
-	// Attribute
-
 	/**
 	 * The graph.
 	 */
@@ -125,8 +199,6 @@ public class AStar implements Algorithm {
 	 */
 	protected boolean noPathFound;
 
-	// Construction
-
 	/**
 	 * New A* algorithm.
 	 */
@@ -158,12 +230,6 @@ public class AStar implements Algorithm {
 		setSource(src);
 		setTarget(trg);
 	}
-
-	// Access
-	/*
-	 * public Graph getGraph() { return graph; }
-	 */
-	// Command
 
 	/**
 	 * Change the source node. This clears the already computed path, but
@@ -205,8 +271,6 @@ public class AStar implements Algorithm {
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see
 	 * org.graphstream.algorithm.Algorithm#init(org.graphstream.graph.Graph)
 	 */
@@ -216,8 +280,6 @@ public class AStar implements Algorithm {
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.graphstream.algorithm.Algorithm#compute()
 	 */
 	public void compute() {
@@ -250,7 +312,7 @@ public class AStar implements Algorithm {
 	 * After having called {@link #compute()} or
 	 * {@link #compute(String, String)}, if the {@link #getShortestPath()}
 	 * returns null, or this method return true, there is no path from the given
-	 * source node to the given target node. In other words, the graph as
+	 * source node to the given target node. In other words, the graph has
 	 * several connected components.
 	 * 
 	 * @return True if there is no possible path from the source to the
@@ -363,9 +425,9 @@ public class AStar implements Algorithm {
 				while (nexts.hasNext()) {
 					Edge edge = nexts.next();
 					Node next = edge.getOpposite(current.node);
-					float h = costs.heuristic(next, targetNode);
-					float g = current.g + costs.cost(current.node, edge, next);
-					float f = g + h;
+					double h = costs.heuristic(next, targetNode);
+					double g = current.g + costs.cost(current.node, edge, next);
+					double f = g + h;
 
 					// If the node is already in open with a better rank, we
 					// skip it.
@@ -400,7 +462,7 @@ public class AStar implements Algorithm {
 		// The problem is that we use open has a hash to ensure
 		// a node we will add to to open is not yet in it.
 
-		float min = Float.MAX_VALUE;
+		double min = Float.MAX_VALUE;
 		AStarNode theChosenOne = null;
 
 		for (AStarNode node : open.values()) {
@@ -429,7 +491,7 @@ public class AStar implements Algorithm {
 		 *            The target node.
 		 * @return The estimated cost between a node and a target node.
 		 */
-		float heuristic(Node node, Node target);
+		double heuristic(Node node, Node target);
 
 		/**
 		 * Cost of displacement from parent to next. The next node must be
@@ -442,18 +504,18 @@ public class AStar implements Algorithm {
 		 *            multi-graph).
 		 * @param next
 		 *            The node we go to.
-		 * @return The real cost of moving from parent to next, or -1 is next is
+		 * @return The real cost of moving from parent to next, or -1 if next is
 		 *         not directly connected to parent by an edge.
 		 */
-		float cost(Node parent, Edge from, Node next);
+		double cost(Node parent, Edge from, Node next);
 	}
 
 	/**
-	 * An implementation of the Costs interface that provide a default
+	 * An implementation of the Costs interface that provides a default
 	 * heuristic. It computes the G part using "weights" on edges. These weights
 	 * must be stored in an attribute on edges. By default this attribute must
 	 * be named "weight", but this can be changed. The weight attribute must be
-	 * a number an must be translatable to a float value. This implementation
+	 * a {@link Number} an must be translatable to a double value. This implementation
 	 * always return 0 for the H value. This makes the A* algorithm an
 	 * equivalent of the Dijkstra algorithm.
 	 */
@@ -491,7 +553,7 @@ public class AStar implements Algorithm {
 		 * 
 		 * @return The estimation.
 		 */
-		public float heuristic(Node node, Node target) {
+		public double heuristic(Node node, Node target) {
 			return 0;
 		}
 
@@ -507,11 +569,11 @@ public class AStar implements Algorithm {
 		 *            The node we go to.
 		 * @return The movement cost.
 		 */
-		public float cost(Node parent, Edge edge, Node next) {
+		public double cost(Node parent, Edge edge, Node next) {
 			// Edge choice = parent.getEdgeToward( next.getId() );
 
 			if (edge != null && edge.hasNumber(weightAttribute))
-				return ((Number) edge.getNumber(weightAttribute)).floatValue();
+				return ((Number) edge.getNumber(weightAttribute)).doubleValue();
 
 			return 1;
 		}
@@ -519,9 +581,9 @@ public class AStar implements Algorithm {
 
 	/**
 	 * An implementation of the Costs interface that assume that the weight of
-	 * edges is an Euclidian distance in 2D or 3D. No weight attribute is used.
+	 * edges is an Euclidean distance in 2D or 3D. No weight attribute is used.
 	 * Instead, for the G value, the edge weights are used. For the H value the
-	 * Euclidian distance in 2D or 3D between the current node and the target
+	 * Euclidean distance in 2D or 3D between the current node and the target
 	 * node is used. For this Costs implementation to work, the graph nodes must
 	 * have a position (either individual "x", "y" and "z" attribute, or "xy"
 	 * attribute or even "xyz" attributes. If there are only "x" and "y" or "xy"
@@ -529,19 +591,19 @@ public class AStar implements Algorithm {
 	 * account.
 	 */
 	public static class DistanceCosts implements AStar.Costs {
-		public float heuristic(Node node, Node target) {
-			float xy1[] = nodePosition(node);
-			float xy2[] = nodePosition(target);
+		public double heuristic(Node node, Node target) {
+			double xy1[] = nodePosition(node);
+			double xy2[] = nodePosition(target);
 
-			float x = xy2[0] - xy1[0];
-			float y = xy2[1] - xy1[1];
-			float z = (xy1.length > 2 && xy2.length > 2) ? (xy2[2] - xy1[2])
+			double x = xy2[0] - xy1[0];
+			double y = xy2[1] - xy1[1];
+			double z = (xy1.length > 2 && xy2.length > 2) ? (xy2[2] - xy1[2])
 					: 0;
 
-			return (float) Math.sqrt((x * x) + (y * y) + (z * z));
+			return Math.sqrt((x * x) + (y * y) + (z * z));
 		}
 
-		public float cost(Node parent, Edge edge, Node next) {
+		public double cost(Node parent, Edge edge, Node next) {
 			return edgeLength(edge);// parent.getEdgeToward( next.getId() ) );
 		}
 	}
@@ -553,15 +615,12 @@ public class AStar implements Algorithm {
 	 * This representation contains :
 	 * <ul>
 	 * <li>the node itself;</li>
-	 * <li>its parent node (to reconstruct the path) ;</li>
-	 * <li>the g value (cost from the source to this node) ;</li>
-	 * <li>the h value (estimated cost from this node to the target) ;</li>
+	 * <li>its parent node (to reconstruct the path);</li>
+	 * <li>the g value (cost from the source to this node);</li>
+	 * <li>the h value (estimated cost from this node to the target);</li>
 	 * <li>the f value or rank, the sum of g and h.</li>
 	 * </ul>
 	 * </p>
-	 * 
-	 * @author Antoine Dutot
-	 * @author Yoann Pigné
 	 */
 	protected class AStarNode {
 		/**
@@ -582,17 +641,17 @@ public class AStar implements Algorithm {
 		/**
 		 * Cost from the source node to this one.
 		 */
-		public float g;
+		public double g;
 
 		/**
 		 * Estimated cost from this node to the destination.
 		 */
-		public float h;
+		public double h;
 
 		/**
 		 * Sum of g and h.
 		 */
-		public float rank;
+		public double rank;
 
 		/**
 		 * New A* node.
@@ -609,8 +668,8 @@ public class AStar implements Algorithm {
 		 * @param h
 		 *            The estimated cost from this node to the target.
 		 */
-		public AStarNode(Node node, Edge edge, AStarNode parent, float g,
-				float h) {
+		public AStarNode(Node node, Edge edge, AStarNode parent, double g,
+				double h) {
 			this.node = node;
 			this.edge = edge;
 			this.parent = parent;

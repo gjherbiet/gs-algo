@@ -1,28 +1,35 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.generator;
 
-import java.util.HashMap;
+import org.graphstream.graph.Node;
 import org.graphstream.stream.Pipe;
 
 /**
@@ -32,6 +39,11 @@ import org.graphstream.stream.Pipe;
  * This generator creates random graphs of any size. Links of such graphs are
  * created according to a threshold. If the Euclidean distance between two nodes
  * is less than a given threshold, then a link is created between those 2 nodes.
+ * <p>
+ * 
+ * <h2>Usage</h2>
+ * 
+ * <p>
  * Calling {@link #begin()} put one unique node in the graph, then
  * {@link #nextEvents()} will add a new node each time it is called and connect
  * this node to its neighbors according to the threshold planar Euclidean
@@ -71,6 +83,24 @@ import org.graphstream.stream.Pipe;
  * |dimension|) .
  * </p>
  * 
+ * <h2>Complexity</h2>
+ * 
+ * For the construction of a n nodes graph, the complexity is about O(n^2).
+ * 
+ * <h2>Example</h2>
+ * 
+ * <pre>
+ * Graph graph = new SingleGraph("random euclidean");
+ * Generator gen = new RandomEuclideanGenerator();
+ * gen.addSink(graph);
+ * gen.begin();
+ * for(int i=0; i<1000; i++) {
+ * 		gen.nextEvents();
+ * }
+ * gen.end();
+ * graph.display(false);
+ * </pre>
+ * 
  * @since June 25 2007
  * @complexity For the construction of a n nodes graph, the complexity is about
  *             O(n^2).
@@ -86,15 +116,13 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 	 */
 	protected int dimension = 2;
 
-	protected HashMap<String, float[]> coords = new HashMap<String, float[]>();
-
 	/**
 	 * The threshold that defines whether or not a link is created between to
 	 * nodes. Since the coordinate system is defined between 0 and 1, the
 	 * threshold has to be set between these two bounds.
 	 */
-	protected float threshold = 0.1f;
-
+	protected double threshold = 0.1;
+	
 	/**
 	 * New random Euclidean graph generator. By default no attributes are added
 	 * to nodes and edges. Dimension of the space is two.
@@ -102,7 +130,7 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 	public RandomEuclideanGenerator() {
 		super();
 		initDimension(2);
-		enableKeepNodesId();
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -116,7 +144,7 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 	public RandomEuclideanGenerator(int dimension) {
 		super();
 		initDimension(dimension);
-		enableKeepNodesId();
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -137,7 +165,7 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 			boolean randomlyDirectedEdges) {
 		super(directed, randomlyDirectedEdges);
 		initDimension(dimension);
-		enableKeepNodesId();
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -163,7 +191,7 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 			String edgeAttribute) {
 		super(directed, randomlyDirectedEdges, nodeAttribute, edgeAttribute);
 		initDimension(dimension);
-		enableKeepNodesId();
+		setUseInternalGraph(true);
 	}
 
 	private void initDimension(int dimension) {
@@ -207,9 +235,9 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 
 		addNode(id);
 
-		for (String node : nodes) {
-			if (!id.equals(node) && distance(id, node) < threshold)
-				addEdge(id + "-" + node, id, node);
+		for (Node n : internalGraph.getEachNode()) {
+			if (!id.equals(n.getId()) && distance(id, n.getId()) < threshold)
+				addEdge(id + "-" + n.getId(), id, n.getId());
 		}
 
 		return true;
@@ -220,8 +248,9 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#end()
 	 */
+	@Override
 	public void end() {
-
+		super.end();
 	}
 
 	/**
@@ -233,25 +262,35 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 	 *            second node
 	 * @return distance between n1 and n2
 	 */
-	private float distance(String n1, String n2) {
-		float d = 0f;
-
-		float[] p1 = coords.get(n1);
-		float[] p2 = coords.get(n2);
+	private double distance(String n1, String n2) {
+		double d = 0.0;
 
 		if (dimension == 2) {
-			d = (float) Math.pow(p1[0] - p2[0], 2)
-					+ (float) Math.pow(p1[1] - p2[1], 2);
+			double x1 = internalGraph.getNode(n1).getNumber("x");
+			double y1 = internalGraph.getNode(n1).getNumber("y");
+			double x2 = internalGraph.getNode(n2).getNumber("x");
+			double y2 = internalGraph.getNode(n2).getNumber("y");
+
+			d = Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2);
 		} else if (dimension == 3) {
-			d = (float) Math.pow(p1[0] - p2[0], 2)
-					+ (float) Math.pow(p1[1] - p2[1], 2)
-					+ (float) Math.pow(p1[2] - p2[2], 2);
+			double x1 = internalGraph.getNode(n1).getNumber("x");
+			double y1 = internalGraph.getNode(n1).getNumber("y");
+			double x2 = internalGraph.getNode(n2).getNumber("x");
+			double y2 = internalGraph.getNode(n2).getNumber("y");
+			double z1 = internalGraph.getNode(n1).getNumber("z");
+			double z2 = internalGraph.getNode(n2).getNumber("z");
+
+			d = Math.pow(z1 - z2, 2) + Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2);
 		} else {
-			for (int i = 0; i < dimension; i++)
-				d += (float) Math.pow(p1[i] - p2[i], 2);
+			for (int i = 0; i < dimension; i++) {
+				double xi1 = internalGraph.getNode(n1).getNumber("x" + i);
+				double xi2 = internalGraph.getNode(n2).getNumber("x" + i);
+
+				d += Math.pow(xi1 - xi2, 2);
+			}
 		}
 
-		return (float) Math.sqrt(d);
+		return Math.sqrt(d);
 	}
 
 	/**
@@ -262,7 +301,7 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 	 * @param threshold
 	 *            The defined threshold.
 	 */
-	public void setThreshold(float threshold) {
+	public void setThreshold(double threshold) {
 		if (threshold <= 1f && threshold >= 0f)
 			this.threshold = threshold;
 	}
@@ -271,16 +310,8 @@ public class RandomEuclideanGenerator extends BaseGenerator implements Pipe {
 		if (key != null && key.matches("x|y|z") && val instanceof Float) {
 			int i = ((int) key.charAt(0)) - (int) 'x';
 
-			if (i < dimension) {
-				float[] p = coords.get(nodeId);
-
-				if (p == null) {
-					p = new float[dimension];
-					coords.put(nodeId, p);
-				}
-
-				p[((int) key.charAt(0)) - (int) 'x'] = (Float) val;
-			}
+			if (i < dimension)
+				internalGraph.getNode(nodeId).addAttribute(key, val);
 		}
 	}
 

@@ -1,40 +1,50 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.coloring;
 
-import java.util.*;
-import java.awt.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.PriorityQueue;
 
-import org.graphstream.algorithm.*;
-import org.graphstream.graph.*;
+import org.graphstream.algorithm.Algorithm;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
 
 /**
- * Welsh Powell static colorating algorithm.
+ * Welsh Powell static graph coloring algorithm.
  * 
  * <p>
- * This class is intended to give some algorithm for computing the well-known
- * coloring problem. It provides the Welsh and Powell greedy algorithm that may
- * used as a static method.
+ * This class is intended to implement the Welsh-Powell algorithm for the
+ * problem of graph coloring. It provides a greedy algorithm that runs on a
+ * static graph.
  * </p>
  * 
  * <p>
@@ -55,21 +65,122 @@ import org.graphstream.graph.*;
  * <p>
  * 
  * <p>
- * This algorithm is known to use at most d(G)+1 colors where d(G) represents
- * the largest value of the degree in the graph G.
+ * Note that the given colors are not real colors. Instead they are positive
+ * integers starting 0. So, for instance, if a colored graph's chromatic number
+ * is 3, then nodes will be "colored" with one of 0, 1 or 2.
  * </p>
  * 
- * <p>
- * After computation (using {@link #compute()}, the algorithm returns its result
- * using the {@link #getLastComputedResult()} method. If you passed "true" to
- * the <tt>modify</tt> parameter, the colors are stored in the graph as
- * attributes. By default the attribute name is "color", so that the viewer
- * displays them accordingly, but you can optionnaly choose the attribute name.
- * </p>
  * 
  * <p>
- * This algorithm uses the <i>std-algo-1.0</i> algorithm's standard.
+ * After computation (using {@link #compute()}, the algorithm result for the
+ * computation, the chromatic number, is accessible with the
+ * {@link #getChromaticNumber()} method.  Colors (of "Integer" type) are stored in the graph as attributes (one for each node).
+ * By default the attribute name is "WelshPowell.color", but you can optional choose the
+ * attribute name.
  * </p>
+ * 
+ * 
+ * 
+ * <h2>Example</h2>
+ * import java.io.IOException;
+ * import java.io.StringReader;
+ * 
+ * import org.graphstream.algorithm.coloring.WelshPowell;
+ * import org.graphstream.graph.ElementNotFoundException;
+ * import org.graphstream.graph.Graph;
+ * import org.graphstream.graph.Node;
+ * import org.graphstream.graph.implementations.DefaultGraph;
+ * import org.graphstream.stream.GraphParseException;
+ * import org.graphstream.stream.file.FileSourceDGS;
+ * 
+ * public class WelshPowellTest {
+ * 	//     B-(1)-C
+ * 	//    /       \
+ * 	//  (1)       (10)
+ * 	//  /           \
+ * 	// A             F
+ * 	//  \           /
+ * 	//  (1)       (1)
+ * 	//    \       /
+ * 	//     D-(1)-E
+ * 	static String my_graph = 
+ * 		"DGS004\n" 
+ * 		+ "my 0 0\n" 
+ * 		+ "an A \n" 
+ * 		+ "an B \n"
+ * 		+ "an C \n"
+ * 		+ "an D \n"
+ * 		+ "an E \n"
+ * 		+ "an F \n"
+ * 		+ "ae AB A B weight:1 \n"
+ * 		+ "ae AD A D weight:1 \n"
+ * 		+ "ae BC B C weight:1 \n"
+ * 		+ "ae CF C F weight:10 \n"
+ * 		+ "ae DE D E weight:1 \n"
+ * 		+ "ae EF E F weight:1 \n"
+ * 		;
+ * 	public static void main(String[] args) throws IOException, ElementNotFoundException, GraphParseException {
+ * 		Graph graph = new DefaultGraph("Welsh Powell Test");
+ * 		StringReader reader  = new StringReader(my_graph);
+ * 		
+ * 		FileSourceDGS source = new FileSourceDGS();
+ * 		source.addSink(graph);
+ * 		source.readAll(reader);
+ * 		
+ * 		WelshPowell wp = new WelshPowell("color");
+ * 		wp.init(graph);
+ * 		wp.compute();
+ * 		
+ * 		System.out.println("The chromatic number of this graph is : "+wp.getChromaticNumber());
+ * 		for(Node n : graph){
+ * 			System.out.println("Node "+n.getId()+ " : color " +n.getAttribute("color"));
+ * 		}		
+ * 	}
+ * }
+ * </pre>
+ * 
+ * This shall return:
+ * <pre>
+ * The chromatic number of this graph is : 3
+ * Node D : color 0
+ * Node E : color 2 
+ * Node F : color 1
+ * Node A : color 2
+ * Node B : color 1
+ * Node C : color 0
+ * </pre>
+ * 
+ * 
+ * <h2>Extra Feature</h2>
+ * 
+ * <p>
+ * Consider you what to display the result of they coloring algorithm on a displayed graph, 
+ * then adding the following code to the previous example may help you:
+ * </p>
+ * 
+ * <pre>
+ * Color[] cols = new Color[wp.getChromaticNumber()];
+ * for(int i=0;i< wp.getChromaticNumber();i++){
+ * 	cols[i]=Color.getHSBColor((float) (Math.random()), 0.8f, 0.9f);
+ * }
+ * for(Node n : graph){
+ * 	int col = (int) n.getNumber("color");
+ * 	n.addAttribute("ui.style", "fill-color:rgba("+cols[col].getRed()+","+cols[col].getGreen()+","+cols[col].getBlue()+",200);" );
+ * }
+ * 
+ * graph.display();
+ * </pre>
+
+ *
+ * 
+ * @complexity
+ * 			This algorithm is known to use at most d(G)+1 colors where d(G) represents
+ * 			the largest value of the degree in the graph G.
+ * 
+ * @reference
+ * 			Welsh, D. J. A.; Powell, M. B. (1967), 
+ * 			"An upper bound for the chromatic number of a graph and its application to timetabling problems", 
+ * 			The Computer Journal 10 (1): 85–86, doi:10.1093/comjnl/10.1.85
  * 
  * @version 0.1 30/08/2007
  * @author Frédéric Guinand
@@ -77,17 +188,11 @@ import org.graphstream.graph.*;
  * @author Yoann Pigné
  */
 public class WelshPowell implements Algorithm {
-	// Attributes
-
-	/**
-	 * Modify the graph ?.
-	 */
-	protected boolean modify = false;
 
 	/**
 	 * Name of the attributes added to the graph.
 	 */
-	protected String attrName = "color";
+	protected String attrName = "WelshPowell.color";
 
 	/**
 	 * The graph.
@@ -95,40 +200,29 @@ public class WelshPowell implements Algorithm {
 	protected Graph g;
 
 	/**
-	 * The algorithm result (number of colors).
+	 * The algorithm's result : the chromatic number.
 	 */
-	protected int result;
+	protected int chromaticNumber;
 
 	// Constructors
 
 	/**
 	 * New Welsh and Powell coloring algorithm.
 	 * 
-	 * @param modify
-	 *            A boolean equals to true if the graph has to be modified,
-	 *            false otherwise
 	 * @param attrName
-	 *            If modify is true, then attrName may be indicated as the name
-	 *            of the attribute corresponding to the color allocated by this
-	 *            algorithm. Note that if attrName is "color", then the color of
-	 *            the nodes will be modified accordingly.
+	 *            name of the attribute corresponding to the color allocated by
+	 *            this algorithm.
 	 */
-	public WelshPowell(boolean modify, String attrName) {
-		this.modify = modify;
+	public WelshPowell(String attrName) {
 		this.attrName = attrName;
 	}
 
 	/**
-	 * New Welsh and Powell coloring algorithm, using "color" as the attribute
-	 * name. If the graph is to be modified, the modification will store colors
-	 * in it and the viewer should display them accordingly.
+	 * New Welsh and Powell coloring algorithm, using "WelshPowell.color" as the attribute
+	 * name. 
 	 * 
-	 * @param modify
-	 *            A boolean equals to true if the graph has to be modified,
-	 *            false otherwise
 	 */
-	public WelshPowell(boolean modify) {
-		this.modify = modify;
+	public WelshPowell() {
 	}
 
 	// Accessors
@@ -139,8 +233,8 @@ public class WelshPowell implements Algorithm {
 	 * @return The number of colors.
 	 * @see #compute()
 	 */
-	public int getLastComputedResult() {
-		return result;
+	public int getChromaticNumber() {
+		return chromaticNumber;
 	}
 
 	// Commands
@@ -155,15 +249,6 @@ public class WelshPowell implements Algorithm {
 		this.attrName = attrName;
 	}
 
-	/**
-	 * Modify the graph when computing the algorithm?.
-	 * 
-	 * @param modify
-	 *            If true, attributes are stored in the graph.
-	 */
-	public void setModify(boolean modify) {
-		this.modify = modify;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -181,9 +266,9 @@ public class WelshPowell implements Algorithm {
 	 * @see org.graphstream.algorithm.Algorithm#compute()
 	 */
 	public void compute() {
-		String attributeName = "welshpowell";
+		String attributeName = "WelshPowell.color";
 
-		if (modify && (attrName != null))
+		if (attrName != null)
 			attributeName = attrName;
 
 		// ------- STEP 1 -----------
@@ -222,18 +307,18 @@ public class WelshPowell implements Algorithm {
 		// ------ STEP 2 --------
 		// color initialization
 
-		ArrayList<Color> allColors = new ArrayList<Color>();
-		Color col;
+		ArrayList<Integer> allColors = new ArrayList<Integer>();
+		Integer col;
 		int nbColors = 0;
 
 		for (int i = 0; i < g.getNodeCount(); i++) {
-			col = Color.getHSBColor((float) (Math.random()), 0.8f, 0.9f);
+			col = i;
 			allColors.add(col);
 		}
 
 		// ------- STEP 3 --------
 
-		Color currentColor = allColors.remove(0);
+		Integer currentColor = allColors.remove(0);
 		nbColors++;
 
 		while (!sortedNodes.isEmpty()) {
@@ -249,7 +334,7 @@ public class WelshPowell implements Algorithm {
 					Node neighb = neighbors.next();
 
 					if (neighb.hasAttribute(attributeName)) {
-						if (((Color) (neighb.getAttribute(attributeName)))
+						if (((neighb.getAttribute(attributeName)))
 								.equals(currentColor)) {
 							conflict = true;
 						}
@@ -268,14 +353,6 @@ public class WelshPowell implements Algorithm {
 			nbColors++;
 		}
 
-		if (!modify) {
-			nodes = g.getNodeIterator();
-
-			while (nodes.hasNext()) {
-				nodes.next().removeAttribute(attributeName);
-			}
-		}
-
-		result = nbColors;
+		chromaticNumber = nbColors-1;
 	}
 }

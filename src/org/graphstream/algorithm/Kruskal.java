@@ -1,24 +1,31 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm;
 
@@ -31,13 +38,68 @@ import java.util.Comparator;
 import java.util.Iterator;
 
 /**
+ * Compute a spanning tree using the Kruskal algorithm.
+ * 
+ * <p>
  * Kruskal's algorithm is a greedy algorithm which allows to find a minimal
  * spanning tree in a weighted connected graph. More informations on <a
  * href="http://en.wikipedia.org/wiki/Kruskal%27s_algorithm">Wikipedia</a>.
+ * </p>
+ * 
+ * <h2>Example</h2>
+ * 
+ * The following example generates a graph with the Dorogovtsev-Mendes generator
+ * and then compute a spanning-tree using the Kruskal algorithm. The generator
+ * creates random weights for edges that will be used by the Kruskal algorithm.
+ * 
+ * If no weight is present, algorithm considers that all weights are set to 1.
+ * 
+ * When an edge is in the spanning tree, the algorithm will set its "ui.class"
+ * attribute to "intree", else the attribute is set to "notintree". According to
+ * the css stylesheet that is defined, spanning will be displayed with thick
+ * black lines while edges not in the spanning tree will be displayed with thin
+ * gray lines.
+ * 
+ * <pre>
+ * import org.graphstream.graph.Graph;
+ * import org.graphstream.graph.implementations.DefaultGraph;
+ * 
+ * import org.graphstream.algorithm.Kruskal;
+ * import org.graphstream.algorithm.generator.DorogovtsevMendesGenerator;
+ * 
+ * public class KruskalTest {
+ *  
+ * 	public static void main(String .. args) {
+ * 		DorogovtsevMendesGenerator gen = new DorogovtsevMendesGenerator();
+ * 		Graph graph = new DefaultGraph("Kruskal Test");
+ * 
+ *  	String css = "edge .notintree {size:1px;fill-color:gray;} " +
+ *  				 "edge .intree {size:3px;fill-color:black;}";
+ *  
+ * 		graph.addAttribute("ui.stylesheet", css);
+ * 		graph.display();
+ * 
+ * 		gen.addEdgeAttribute("weight");
+ * 		gen.setEdgeAttributesRange(1, 100);
+ * 		gen.addSink(graph);
+ * 		gen.begin();
+ * 		for (int i = 0; i < 100 && gen.nextEvents(); i++)
+ * 			;
+ * 		gen.end();
+ * 
+ * 		Kruskal kruskal = new Kruskal("ui.class", "intree", "notintree");
+ * 
+ * 		kruskal.init(g);
+ * 		kruskal.compute();
+ *  }
+ * }
+ * </pre>
  * 
  * @complexity m*(log(m)+3)+n+n<sup>2</sup>, m = |E|, n = |V|
- * 
- * @author Guilhelm Savin
+ * @reference Joseph. B. Kruskal: On the Shortest Spanning Subtree of a Graph
+ *            and the Traveling Salesman Problem. In: Proceedings of the
+ *            American Mathematical Society, Vol 7, No. 1 (Feb, 1956), pp. 48–50
+ * @see org.graphstream.algorithm.AbstractSpanningTree
  * 
  */
 public class Kruskal extends AbstractSpanningTree {
@@ -73,6 +135,22 @@ public class Kruskal extends AbstractSpanningTree {
 	 */
 	public Kruskal(String weightAttribute, String flagAttribute) {
 		this(weightAttribute, flagAttribute, true, false);
+	}
+
+	/**
+	 * Create a new Kruskal's algorithm.
+	 * 
+	 * @param flagAttribute
+	 *            attribute used to set if an edge is in the spanning tree
+	 * @param flagOn
+	 *            value of the <i>flagAttribute</i> if edge is in the spanning
+	 *            tree
+	 * @param flagOff
+	 *            value of the <i>flagAttribute</i> if edge is not in the
+	 *            spanning tree
+	 */
+	public Kruskal(String flagAttribute, Object flagOn, Object flagOff) {
+		this("weight", flagAttribute, flagOn, flagOff);
 	}
 
 	/**
@@ -177,8 +255,11 @@ public class Kruskal extends AbstractSpanningTree {
 	 *            an edge
 	 * @return weight of <i>e</i>
 	 */
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings("unchecked")
 	protected Comparable getWeight(Edge e) {
+		if (!e.hasAttribute(weightAttribute))
+			return Double.valueOf(1);
+
 		return (Comparable) e.getAttribute(weightAttribute, Comparable.class);
 	}
 
@@ -260,8 +341,6 @@ public class Kruskal extends AbstractSpanningTree {
 	/**
 	 * A comparator which uses the <i>weightAttribute</i> of its parent's class
 	 * to compare edges.
-	 * 
-	 * @author Guilhelm Savin
 	 */
 	private final class WeightEdgeComparator implements Comparator<Edge> {
 		/**
