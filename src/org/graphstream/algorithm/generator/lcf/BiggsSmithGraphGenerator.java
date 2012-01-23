@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -46,6 +45,10 @@ import org.graphstream.algorithm.generator.LCFGenerator;
  * 31, -25, 24, -46, -14, 28, 11, 21, 35, -39, 43, 36, -38, 14, 50, 43, 36, -11,
  * -36, -24, 45, 8, 19, -25, 38, 20, -24, -14, -21, -8, 44, -31, -38, -28, 37]</dd>
  * </dl>
+ * 
+ * @reference On trivalent graphs, NL Biggs, DH Smith - Bulletin of the London
+ *            Mathematical Society, 3 (1971) 155-158
+ * 
  */
 public class BiggsSmithGraphGenerator extends LCFGenerator {
 	/**
@@ -59,7 +62,7 @@ public class BiggsSmithGraphGenerator extends LCFGenerator {
 			-18, 25, 38, 31, -25, 24, -46, -14, 28, 11, 21, 35, -39, 43, 36,
 			-38, 14, 50, 43, 36, -11, -36, -24, 45, 8, 19, -25, 38, 20, -24,
 			-14, -21, -8, 44, -31, -38, -28, 37);
-	
+
 	public BiggsSmithGraphGenerator() {
 		super(BIGGS_SMITH_GRAPH_LCF, 102, false);
 	}

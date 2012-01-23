@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -41,12 +40,16 @@ import org.graphstream.algorithm.generator.LCFGenerator;
  * <dt>LCF</dt>
  * <dd>[12,7,-7]^8</dd>
  * </dl>
+ * 
+ * @reference McGee, W. F. "A Minimal Cubic Graph of Girth Seven." Canad. Math.
+ *            Bull. 3, 149-152, 1960.
+ * 
  */
 public class McGeeGraphGenerator extends LCFGenerator {
 	/**
 	 * LCF notation of a McGee graph.
 	 */
-	public static final LCF MCGEE_GRAPH_LCF = new LCF(8, 12,7,-7);
+	public static final LCF MCGEE_GRAPH_LCF = new LCF(8, 12, 7, -7);
 
 	public McGeeGraphGenerator() {
 		super(MCGEE_GRAPH_LCF, 24, false);

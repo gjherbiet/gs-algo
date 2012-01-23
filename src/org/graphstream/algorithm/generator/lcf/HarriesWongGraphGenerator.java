@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -44,6 +43,10 @@ import org.graphstream.algorithm.generator.LCFGenerator;
  * -25, 29, -33, 13, -13, 21, -29, -21, 25, 9, -11, -19, 29, 9, -27, -19, -13,
  * -35, -9, 9, 17, 25, -9, 9, 27, -27, -21, 15, -9, 29, -29, 33, -9, -25]</dd>
  * </dl>
+ * 
+ * @reference Weisstein, Eric W. "Harries-Wong Graph." From MathWorld--A Wolfram
+ *            Web Resource. http://mathworld.wolfram.com/Harries-WongGraph.html
+ * 
  */
 public class HarriesWongGraphGenerator extends LCFGenerator {
 	/**

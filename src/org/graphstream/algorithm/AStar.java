@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -53,43 +52,110 @@ import org.graphstream.graph.Path;
  * <p>
  * In this A* implementation, the various costs (often called g, h and f) are
  * given by a {@link org.graphstream.algorithm.AStar.Costs} class. This class
- * must provide a way to compute :
+ * must provide a way to compute:
  * <ul>
- * <li>The cost of moving from a node to another, often called g ;</li>
+ * <li>The cost of moving from a node to another, often called g;</li>
  * <li>The estimated cost from a node to the destination, the heuristic, often
- * noted h ;</li>
+ * noted h;</li>
  * <li>f is the sum of g and h and is computed automatically.</li>
  * </ul>
  * </p>
  * 
  * <p>
  * By default the {@link org.graphstream.algorithm.AStar.Costs} implementation
- * used uses an heuristic that returns 0 for any heuristic. This makes A* an
+ * used uses a heuristic that returns 0 for any heuristic. This makes A* an
  * equivalent of the Dijkstra algorithm, but also makes it far less efficient.
  * </p>
  * 
- * <p>
- * The basic usage of this algorithm is as follows :
+ * <h2>Usage</h2>
  * 
+ * <p>The basic usage is to create an instance of A*, then to ask it to compute
+ * from a shortest path from one target to one destination, and finally to ask
+ * for that path:
+ * </p>
  * <pre>
- * AStart astar = new AStar(graph);
- * astar.compute(&quot;A&quot;, &quot;Z&quot;); // with A and Z node identifiers in the graph.
+ * AStart astar = new AStar(graph); 
+ * astar.compute("A", "Z"); // with A and Z node identifiers in the graph. 
+ * Path path = astar.getShortestPath();
+ * </pre>
+ * <p>
+ * The advantage of A* is that it can consider any cost function to drive the
+ * search. You can create your own cost functions implementing the
+ * {@link org.graphstream.algorithm.AStar.Costs} interface.
+ * </p>
+ * <p>
+ * You can also test the default "distance" cost function on a graph that has
+ * "x" and "y" values. You specify the {@link Costs} function before calling the
+ * {@link #compute(String,String)} method:
+ * </p>
+ * <pre>
+ * AStart astar = new AStar(graph); 
+ * astar.setCosts(new DistanceCosts());
+ * astar.compute("A", "Z"); 
  * Path path = astar.getShortestPath();
  * </pre>
  * 
- * </p>
+ * <h2>Example</h2>
  * 
- * <p>
- * This algorithm uses the <i>std-algo-1.0</i> algorithm's standard.
- * </p>
+ * <pre>
+ * import java.io.IOException;
+ * import java.io.StringReader;
+ * 
+ * import org.graphstream.algorithm.AStar;
+ * import org.graphstream.algorithm.AStar.DistanceCosts;
+ * import org.graphstream.graph.Graph;
+ * import org.graphstream.graph.implementations.DefaultGraph;
+ * import org.graphstream.stream.file.FileSourceDGS;
+ * 
+ * public class AStarTest {
+ * 	
+ * 	//     B-(1)-C
+ * 	//    /       \
+ * 	//  (1)       (10)
+ * 	//  /           \
+ * 	// A             F
+ * 	//  \           /
+ * 	//  (1)       (1)
+ * 	//    \       /
+ * 	//     D-(1)-E
+ * 	static String my_graph = 
+ * 		"DGS004\n" 
+ * 		+ "my 0 0\n" 
+ * 		+ "an A xy: 0,1\n" 
+ * 		+ "an B xy: 1,2\n"
+ * 		+ "an C xy: 2,2\n"
+ * 		+ "an D xy: 1,0\n"
+ * 		+ "an E xy: 2,0\n"
+ * 		+ "an F xy: 3,1\n"
+ * 		+ "ae AB A B weight:1 \n"
+ * 		+ "ae AD A D weight:1 \n"
+ * 		+ "ae BC B C weight:1 \n"
+ * 		+ "ae CF C F weight:10 \n"
+ * 		+ "ae DE D E weight:1 \n"
+ * 		+ "ae EF E F weight:1 \n"
+ * 		;
+ * 
+ * 	public static void main(String[] args) throws IOException {
+ * 		Graph graph = new DefaultGraph("A* Test");
+ * 		StringReader reader = new StringReader(my_graph);
+ * 
+ * 		FileSourceDGS source = new FileSourceDGS();
+ * 		source.addSink(graph);
+ * 		source.readAll(reader);
+ * 
+ * 		AStar astar = new AStar(graph);
+ * 		//astar.setCosts(new DistanceCosts());
+ * 		astar.compute("C", "F");
+ * 
+ * 		System.out.println(astar.getShortestPath());
+ * 	}
+ * }
+ * </pre>
+ *
  * 
  * @complexity The complexity of A* depends on the heuristic.
- * @author Antoine Dutot
- * @author Yoann Pigné
  */
 public class AStar implements Algorithm {
-	// Attribute
-
 	/**
 	 * The graph.
 	 */
@@ -133,8 +199,6 @@ public class AStar implements Algorithm {
 	 */
 	protected boolean noPathFound;
 
-	// Construction
-
 	/**
 	 * New A* algorithm.
 	 */
@@ -166,12 +230,6 @@ public class AStar implements Algorithm {
 		setSource(src);
 		setTarget(trg);
 	}
-
-	// Access
-	/*
-	 * public Graph getGraph() { return graph; }
-	 */
-	// Command
 
 	/**
 	 * Change the source node. This clears the already computed path, but
@@ -213,8 +271,6 @@ public class AStar implements Algorithm {
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see
 	 * org.graphstream.algorithm.Algorithm#init(org.graphstream.graph.Graph)
 	 */
@@ -224,8 +280,6 @@ public class AStar implements Algorithm {
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.graphstream.algorithm.Algorithm#compute()
 	 */
 	public void compute() {
@@ -258,7 +312,7 @@ public class AStar implements Algorithm {
 	 * After having called {@link #compute()} or
 	 * {@link #compute(String, String)}, if the {@link #getShortestPath()}
 	 * returns null, or this method return true, there is no path from the given
-	 * source node to the given target node. In other words, the graph as
+	 * source node to the given target node. In other words, the graph has
 	 * several connected components.
 	 * 
 	 * @return True if there is no possible path from the source to the
@@ -450,18 +504,18 @@ public class AStar implements Algorithm {
 		 *            multi-graph).
 		 * @param next
 		 *            The node we go to.
-		 * @return The real cost of moving from parent to next, or -1 is next is
+		 * @return The real cost of moving from parent to next, or -1 if next is
 		 *         not directly connected to parent by an edge.
 		 */
 		double cost(Node parent, Edge from, Node next);
 	}
 
 	/**
-	 * An implementation of the Costs interface that provide a default
+	 * An implementation of the Costs interface that provides a default
 	 * heuristic. It computes the G part using "weights" on edges. These weights
 	 * must be stored in an attribute on edges. By default this attribute must
 	 * be named "weight", but this can be changed. The weight attribute must be
-	 * a number an must be translatable to a float value. This implementation
+	 * a {@link Number} an must be translatable to a double value. This implementation
 	 * always return 0 for the H value. This makes the A* algorithm an
 	 * equivalent of the Dijkstra algorithm.
 	 */
@@ -527,9 +581,9 @@ public class AStar implements Algorithm {
 
 	/**
 	 * An implementation of the Costs interface that assume that the weight of
-	 * edges is an Euclidian distance in 2D or 3D. No weight attribute is used.
+	 * edges is an Euclidean distance in 2D or 3D. No weight attribute is used.
 	 * Instead, for the G value, the edge weights are used. For the H value the
-	 * Euclidian distance in 2D or 3D between the current node and the target
+	 * Euclidean distance in 2D or 3D between the current node and the target
 	 * node is used. For this Costs implementation to work, the graph nodes must
 	 * have a position (either individual "x", "y" and "z" attribute, or "xy"
 	 * attribute or even "xyz" attributes. If there are only "x" and "y" or "xy"
@@ -561,15 +615,12 @@ public class AStar implements Algorithm {
 	 * This representation contains :
 	 * <ul>
 	 * <li>the node itself;</li>
-	 * <li>its parent node (to reconstruct the path) ;</li>
-	 * <li>the g value (cost from the source to this node) ;</li>
-	 * <li>the h value (estimated cost from this node to the target) ;</li>
+	 * <li>its parent node (to reconstruct the path);</li>
+	 * <li>the g value (cost from the source to this node);</li>
+	 * <li>the h value (estimated cost from this node to the target);</li>
 	 * <li>the f value or rank, the sum of g and h.</li>
 	 * </ul>
 	 * </p>
-	 * 
-	 * @author Antoine Dutot
-	 * @author Yoann Pigné
 	 */
 	protected class AStarNode {
 		/**

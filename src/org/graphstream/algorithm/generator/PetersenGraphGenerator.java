@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -33,6 +32,7 @@ package org.graphstream.algorithm.generator;
 /**
  * Generate a Petersen graph.
  * 
+ * <p>
  * In the mathematical field of graph theory, the Petersen graph is an
  * undirected graph with 10 vertices and 15 edges. It is a small graph that
  * serves as a useful example and counterexample for many problems in graph
@@ -43,8 +43,13 @@ package org.graphstream.algorithm.generator;
  * (1886). Donald Knuth states that the Petersen graph is "a remarkable
  * configuration that serves as a counterexample to many optimistic predictions
  * about what might be true for graphs in general."
+ * </p>
  * 
  * Source : <a href="http://en.wikipedia.org/wiki/Petersen_graph">Wikipedia</a>
+ * 
+ * @reference Petersen, Julius (1898), "Sur le théorème de Tait",
+ *            L'Intermédiaire des Mathématiciens 5: 225–227.
+ * 
  */
 public class PetersenGraphGenerator extends BaseGenerator {
 
@@ -52,6 +57,7 @@ public class PetersenGraphGenerator extends BaseGenerator {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#begin()
 	 */
 	public void begin() {
@@ -82,6 +88,7 @@ public class PetersenGraphGenerator extends BaseGenerator {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#nextEvents()
 	 */
 	public boolean nextEvents() {

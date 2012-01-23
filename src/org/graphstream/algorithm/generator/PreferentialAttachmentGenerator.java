@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -33,15 +32,18 @@ package org.graphstream.algorithm.generator;
 import java.util.ArrayList;
 
 /**
- * Scale-free graph (tree) generator using the preferential attachment rule
- * as defined in the Barabási-Albert model.
+ * Scale-free tree generator using the preferential attachment rule as
+ * defined in the Barabási-Albert model.
+ * 
+ * <p>
+ * THIS GENERATOR IS DEPRECATED, USE THE {@link BarabasiAlbertGenerator} INSTEAD.
+ * </p>
  * 
  * <p>
  * This is a very simple graph generator that generates a tree using the
- * preferential attachment rule defined in the Barabási-Albert model: nodes
- * are generated one by one, and each time attached by an edge to another
- * node that has more chance to chosen if it already has lots of nodes
- * attached to it.
+ * preferential attachment rule defined in the Barabási-Albert model: nodes are
+ * generated one by one, and each time attached by an edge to another node that
+ * has more chance to chosen if it already has lots of nodes attached to it.
  * </p>
  * 
  * <p>
@@ -49,18 +51,13 @@ import java.util.ArrayList;
  * therefore generate trees of any size.
  * </p>
  * 
- * <p>This is taken from the paper :
- * 	<ul>
- *      <li>Emergence of scaling in random networks</li>
- * 		<li>Albert-László Barabási & Réka Albert</li>
- *      <li>Science 286: 509–512</li>
- *      <li>October 1999</li>
- *      <li>doi:10.1126/science.286.5439.509.</li>
- *  </ul>
- * </p>
+ * @reference Albert-László Barabási & Réka Albert
+ *            "Emergence of scaling in random networks". Science 286: 509–512.
+ *            October 1999. doi:10.1126/science.286.5439.509.
  * 
  * @since 20061128
  */
+@Deprecated
 public class PreferentialAttachmentGenerator extends BaseGenerator {
 	/**
 	 * Degree of each node.

@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -41,12 +40,17 @@ import org.graphstream.algorithm.generator.LCFGenerator;
  * <dt>LCF</dt>
  * <dd>[17,-9,37,-37,9,-17]^15</dd>
  * </dl>
+ * 
+ * @reference Foster, R. M. "Geometrical Circuits of Electrical Networks."
+ *            Trans. Amer. Inst. Elec. Engin. 51, 309-317, 1932.
+ * 
  */
 public class FosterGraphGenerator extends LCFGenerator {
 	/**
 	 * LCF notation of a Foster graph.
 	 */
-	public static final LCF FOSTER_GRAPH_LCF = new LCF(15, 17,-9,37,-37,9,-17);
+	public static final LCF FOSTER_GRAPH_LCF = new LCF(15, 17, -9, 37, -37, 9,
+			-17);
 
 	public FosterGraphGenerator() {
 		super(FOSTER_GRAPH_LCF, 90, false);

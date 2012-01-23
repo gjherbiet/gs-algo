@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -35,8 +34,16 @@ import org.graphstream.algorithm.generator.LCFGenerator;
 /**
  * Build a Wagner graph.
  * 
- * Nodes : 8
- * LCF   : [4]^8
+ * <dl>
+ * <dt>Nodes</dt>
+ * <dd>8</dd>
+ * <ddt>LCF</dt>
+ * <dd>[4]^8</dd>
+ * </dl>
+ * 
+ * @reference Wagner, K. (1937). "Über eine Eigenschaft der ebenen Komplexe".
+ *            Mathematische Annalen 114 (1): 570–590. doi:10.1007/BF01594196
+ * 
  */
 public class WagnerGraphGenerator extends LCFGenerator {
 	/**

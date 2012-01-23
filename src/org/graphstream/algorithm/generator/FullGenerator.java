@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -29,6 +28,8 @@
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.generator;
+
+import org.graphstream.graph.Node;
 
 /**
  * Full graph generator.
@@ -71,7 +72,7 @@ public class FullGenerator extends BaseGenerator {
 	 */
 	public FullGenerator() {
 		super();
-		keepNodesId = true;
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -84,7 +85,7 @@ public class FullGenerator extends BaseGenerator {
 	 */
 	public FullGenerator(boolean directed, boolean randomlyDirectedEdges) {
 		super(directed, randomlyDirectedEdges);
-		keepNodesId = true;
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -104,7 +105,7 @@ public class FullGenerator extends BaseGenerator {
 	public FullGenerator(boolean directed, boolean randomlyDirectedEdges,
 			String nodeAttribute, String edgeAttribute) {
 		super(directed, randomlyDirectedEdges, nodeAttribute, edgeAttribute);
-		keepNodesId = true;
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -128,21 +129,11 @@ public class FullGenerator extends BaseGenerator {
 
 		addNode(id);
 
-		for (String otherId : nodes) {
-			if (otherId != id) // We can compare refs safely here.
-				addEdge(null, id, otherId);
+		for (Node n : internalGraph.getEachNode()) {
+			if (!n.getId().equals(id)) // We can compare refs safely here.
+				addEdge(null, id, n.getId());
 		}
 
 		return true;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.algorithm.generator.Generator#end()
-	 */
-	@Override
-	public void end() {
-		super.end();
 	}
 }

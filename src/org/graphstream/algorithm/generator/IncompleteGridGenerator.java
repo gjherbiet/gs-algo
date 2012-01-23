@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -95,7 +94,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 	 */
 	public IncompleteGridGenerator(boolean cross, float holeProbability,
 			int holeMaxSize, int holesPerStep) {
-		enableKeepNodesId();
+		setUseInternalGraph(true);
 
 		this.cross = cross;
 		this.holeProbability = holeProbability;
@@ -132,7 +131,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 		if (x > 0) {
 			neigh = getNodeId(x - 1, y);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 			else
 				unbreakable.add(nodeId);
@@ -141,7 +140,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 		if (x < currentWidth - 1) {
 			neigh = getNodeId(x + 1, y);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 			else
 				unbreakable.add(nodeId);
@@ -150,7 +149,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 		if (y > 0) {
 			neigh = getNodeId(x, y - 1);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 			else
 				unbreakable.add(nodeId);
@@ -159,19 +158,19 @@ public class IncompleteGridGenerator extends BaseGenerator {
 		if (y < currentHeight - 1) {
 			neigh = getNodeId(x, y + 1);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 			else
 				unbreakable.add(nodeId);
 		}
 
 		// Cross
-		
+
 		if (x > 0) {
 			if (y > 0) {
 				neigh = getNodeId(x - 1, y - 1);
 
-				if (nodes.contains(neigh)) {
+				if (internalGraph.getNode(neigh) != null) {
 					if (cross)
 						addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 				} else
@@ -181,7 +180,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 			if (y < currentHeight - 1) {
 				neigh = getNodeId(x - 1, y + 1);
 
-				if (nodes.contains(neigh)) {
+				if (internalGraph.getNode(neigh) != null) {
 					if (cross)
 						addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 				} else
@@ -193,7 +192,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 			if (y > 0) {
 				neigh = getNodeId(x + 1, y - 1);
 
-				if (nodes.contains(neigh)) {
+				if (internalGraph.getNode(neigh) != null) {
 					if (cross)
 						addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 				} else
@@ -203,7 +202,7 @@ public class IncompleteGridGenerator extends BaseGenerator {
 			if (y < currentHeight - 1) {
 				neigh = getNodeId(x + 1, y + 1);
 
-				if (nodes.contains(neigh)) {
+				if (internalGraph.getNode(neigh) != null) {
 					if (cross)
 						addEdge(getEdgeId(nodeId, neigh), nodeId, neigh);
 				} else
@@ -227,28 +226,28 @@ public class IncompleteGridGenerator extends BaseGenerator {
 		if (x > 0) {
 			neigh = getNodeId(x - 1, y);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				delEdge(getEdgeId(nodeId, neigh));
 		}
 
 		if (x < currentWidth - 1) {
 			neigh = getNodeId(x + 1, y);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				delEdge(getEdgeId(nodeId, neigh));
 		}
 
 		if (y > 0) {
 			neigh = getNodeId(x, y - 1);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				delEdge(getEdgeId(nodeId, neigh));
 		}
 
 		if (y < currentHeight - 1) {
 			neigh = getNodeId(x, y + 1);
 
-			if (nodes.contains(neigh))
+			if (internalGraph.getNode(neigh) != null)
 				delEdge(getEdgeId(nodeId, neigh));
 		}
 
@@ -257,14 +256,14 @@ public class IncompleteGridGenerator extends BaseGenerator {
 				if (y > 0) {
 					neigh = getNodeId(x - 1, y - 1);
 
-					if (nodes.contains(neigh))
+					if (internalGraph.getNode(neigh) != null)
 						delEdge(getEdgeId(nodeId, neigh));
 				}
 
 				if (y < currentHeight - 1) {
 					neigh = getNodeId(x - 1, y + 1);
 
-					if (nodes.contains(neigh))
+					if (internalGraph.getNode(neigh) != null)
 						delEdge(getEdgeId(nodeId, neigh));
 				}
 			}
@@ -273,14 +272,14 @@ public class IncompleteGridGenerator extends BaseGenerator {
 				if (y > 0) {
 					neigh = getNodeId(x + 1, y - 1);
 
-					if (nodes.contains(neigh))
+					if (internalGraph.getNode(neigh) != null)
 						delEdge(getEdgeId(nodeId, neigh));
 				}
 
 				if (y < currentHeight - 1) {
 					neigh = getNodeId(x + 1, y + 1);
 
-					if (nodes.contains(neigh))
+					if (internalGraph.getNode(neigh) != null)
 						delEdge(getEdgeId(nodeId, neigh));
 				}
 			}
@@ -305,16 +304,16 @@ public class IncompleteGridGenerator extends BaseGenerator {
 	 */
 	public boolean nextEvents() {
 		for (int i = 0; i < currentWidth; i++) {
-			addNode(getNodeId(i, currentHeight));
+			addNode(getNodeId(i, currentHeight), i, currentHeight);
 			connectNode(i, currentHeight);
 		}
 
 		for (int i = 0; i < currentHeight; i++) {
-			addNode(getNodeId(currentWidth, i));
+			addNode(getNodeId(currentWidth, i), currentWidth, i);
 			connectNode(currentWidth, i);
 		}
 
-		addNode(getNodeId(currentWidth, currentHeight));
+		addNode(getNodeId(currentWidth, currentHeight), currentWidth, currentHeight);
 		connectNode(currentWidth, currentHeight);
 
 		currentWidth++;
@@ -331,10 +330,11 @@ public class IncompleteGridGenerator extends BaseGenerator {
 					x1 = random.nextInt(currentWidth);
 					y1 = random.nextInt(currentHeight);
 					t++;
-				} while ((!nodes.contains(getNodeId(x1, y1)) || unbreakable
-						.contains(getNodeId(x1, y1))) && t < nodes.size());
+				} while ((internalGraph.getNode(getNodeId(x1, y1)) == null || unbreakable
+						.contains(getNodeId(x1, y1)))
+						&& t < internalGraph.getNodeCount());
 
-				if (t >= nodes.size())
+				if (t >= internalGraph.getNodeCount())
 					continue;
 
 				sizeX = random.nextInt(holeMaxSize);
@@ -343,7 +343,8 @@ public class IncompleteGridGenerator extends BaseGenerator {
 				for (int i = 0; i < sizeX; i++)
 					for (int j = 0; j < sizeY; j++) {
 						String id = getNodeId(x1 + i, y1 + j);
-						if (nodes.contains(id) && !unbreakable.contains(id)) {
+						if (internalGraph.getNode(id) != null
+								&& !unbreakable.contains(id)) {
 							disconnectNode(x1 + i, y1 + j);
 							delNode(getNodeId(x1 + i, y1 + j));
 

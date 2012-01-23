@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -44,6 +43,10 @@ import org.graphstream.algorithm.generator.LCFGenerator;
  * -25, 23, 9, -17, 51, 35, -29, 21, -51, -39, 33, -9, -51, 51, -47, -33, 19,
  * 51, -21, 29, 21, -31, -39]^2</dd>
  * </dl>
+ * 
+ * @reference Weisstein, Eric W. "Ljubljana Graph." From MathWorld--A Wolfram
+ *            Web Resource. http://mathworld.wolfram.com/LjubljanaGraph.html
+ * 
  */
 public class LjubljanaGraphGenerator extends LCFGenerator {
 	/**

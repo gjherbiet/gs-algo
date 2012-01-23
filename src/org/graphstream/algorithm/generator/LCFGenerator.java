@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -36,10 +35,19 @@ import java.util.HashSet;
  * Build a graph using a lcf notation.
  * 
  * Source : <a href="http://en.wikipedia.org/wiki/LCF_notation">Wikipedia</a>
- *
+ * 
  */
 public class LCFGenerator extends BaseGenerator {
 
+	/**
+	 * Model a LCF notation. Such notations are noted [a0,a1,...,an]^k. This is
+	 * translate as LCF object in this way :
+	 * 
+	 * <pre>
+	 * new LCF(k, a0, a1, ..., an)
+	 * </pre>
+	 * 
+	 */
 	public static class LCF {
 		int repeat;
 		int[] steps;
@@ -56,6 +64,17 @@ public class LCFGenerator extends BaseGenerator {
 	protected LCF lcf;
 	protected boolean canBeExtended;
 
+	/**
+	 * Build a new graph generator using a LCF notation.
+	 * 
+	 * @param lcf
+	 *            the lcf notation describing the graph
+	 * @param initialRingSize
+	 *            initial amount of nodes
+	 * @param canBeExtended
+	 *            true if the graph can be extended, ie. if a node can be added
+	 *            in a new #nextEvents() call
+	 */
 	public LCFGenerator(LCF lcf, int initialRingSize, boolean canBeExtended) {
 		this.lcf = lcf;
 		this.crossed = new HashSet<String>();
@@ -63,6 +82,11 @@ public class LCFGenerator extends BaseGenerator {
 		this.canBeExtended = canBeExtended;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.algorithm.generator.Generator#begin()
+	 */
 	public void begin() {
 		addNode(getNodeId(0));
 		addNode(getNodeId(1));
@@ -81,6 +105,11 @@ public class LCFGenerator extends BaseGenerator {
 		makeLCF();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.algorithm.generator.Generator#nextEvents()
+	 */
 	public boolean nextEvents() {
 		if (canBeExtended) {
 			increaseRing();

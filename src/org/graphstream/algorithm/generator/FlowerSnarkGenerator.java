@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -31,12 +30,20 @@
 package org.graphstream.algorithm.generator;
 
 /**
+ * Flower snark generator.
+ * 
+ * <p>
  * In the mathematical field of graph theory, the flower snarks form an infinite
  * family of snarks introduced by Rufus Isaacs in 1975. As snarks, the flower
  * snarks are a connected, bridgeless cubic graphs with chromatic index equal to
  * 4. The flower snarks are non-planar and non-hamiltonian.
+ * </p>
  * 
  * Source : <a href="http://en.wikipedia.org/wiki/Flower_snark">Wikipedia</a>
+ * 
+ * @reference Isaacs, R.
+ *            "Infinite Families of Nontrivial Trivalent Graphs Which Are Not Tait Colorable."
+ *            Amer. Math. Monthly 82, 221–239, 1975.
  */
 public class FlowerSnarkGenerator extends BaseGenerator {
 

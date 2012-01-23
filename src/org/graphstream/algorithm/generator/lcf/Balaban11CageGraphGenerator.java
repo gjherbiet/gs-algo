@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -47,6 +46,11 @@ import org.graphstream.algorithm.generator.LCFGenerator;
  * 37, -17, 10, -10, -45, -34, 17, -26, 27, -21, 46, 53, -10, 29, -50, 35, 15,
  * -47, -29, -41, 26, 33, 55, -17, 42, -26, -36, 16]</dd>
  * </dl>
+ * 
+ * @reference A. T. Balaban, Trivalent Graphs of Girth Nine and Eleven and
+ *            Relationships Among the Cages, Rev. Roumaine Math., 18, 1033-1043,
+ *            1973
+ * 
  */
 public class Balaban11CageGraphGenerator extends LCFGenerator {
 	/**
