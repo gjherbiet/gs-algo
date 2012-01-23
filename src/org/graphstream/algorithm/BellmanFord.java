@@ -1,24 +1,31 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm;
 
@@ -31,6 +38,8 @@ import org.graphstream.graph.Node;
 import org.graphstream.graph.Path;
 
 /**
+ * Implementation of the Bellman-Ford algorithm that computes single-source
+ * shortest paths in a weighted digraph
  * <p>
  * The Bellman-Ford algorithm computes single-source shortest paths in a
  * weighted digraph (where some of the edge weights may be negative). Dijkstra's
@@ -40,10 +49,70 @@ import org.graphstream.graph.Path;
  * href="http://en.wikipedia.org/wiki/Bellman-Ford_algorithm">Wikipedia</a>).
  * </p>
  * 
+ * <h2>Example</h2>
+ * <pre>
+ * import java.io.IOException;
+ * import java.io.StringReader;
+ * 
+ * import org.graphstream.algorithm.BellmanFord;
+ * import org.graphstream.graph.Graph;
+ * import org.graphstream.graph.implementations.DefaultGraph;
+ * import org.graphstream.stream.file.FileSourceDGS;
+ * 
+ * public class BellmanFordTest {
+ * 	
+ * 	//     B-(1)-C
+ * 	//    /       \
+ * 	//  (1)       (10)
+ * 	//  /           \
+ * 	// A             F
+ * 	//  \           /
+ * 	//  (1)       (1)
+ * 	//    \       /
+ * 	//     D-(1)-E
+ * 	static String my_graph = 
+ * 		"DGS004\n" 
+ * 		+ "my 0 0\n" 
+ * 		+ "an A \n" 
+ * 		+ "an B \n"
+ * 		+ "an C \n"
+ * 		+ "an D \n"
+ * 		+ "an E \n"
+ * 		+ "an F \n"
+ * 		+ "ae AB A B weight:1 \n"
+ * 		+ "ae AD A D weight:1 \n"
+ * 		+ "ae BC B C weight:1 \n"
+ * 		+ "ae CF C F weight:10 \n"
+ * 		+ "ae DE D E weight:1 \n"
+ * 		+ "ae EF E F weight:1 \n"
+ * 		;
+ * 	
+ * 	public static void main(String[] args) throws IOException {
+ * 		Graph graph = new DefaultGraph("Bellman-Ford Test");
+ * 		StringReader reader  = new StringReader(my_graph);
+ * 		
+ * 		FileSourceDGS source = new FileSourceDGS();
+ * 		source.addSink(graph);
+ * 		source.readAll(reader);
+ * 
+ * 		BellmanFord bf = new BellmanFord("weight","A");
+ * 		bf.init(graph);
+ * 		bf.compute();
+ * 
+ * 		System.out.println(bf.getShortestPath(graph.getNode("F")));
+ * 	}
+ * }
+ * </pre>
  * <h3>Warning</h3>
  * <p>
- * For the moment only attributes located on the edges are supported.
+ * This Implementation is only a stub. For the moment only attributes located on
+ * the edges are supported. If you need more features, consider using the
+ * Dijkstra implementation. If you really need that algorithm, please contact
+ * the team members through the mailing list.
  * </p>
+ * 
+ * @reference Bellman, Richard "On a routing problem", Quarterly of Applied
+ *            Mathematics 16: 87–90. 1958.
  * 
  * @complexity O(VxE) time, where V and E are the number of vertices and edges
  *             respectively.
@@ -62,8 +131,16 @@ public class BellmanFord implements Algorithm {
 	/**
 	 * ID of the source node.
 	 */
-	protected String source;
+	protected String source_id;
 
+	protected Node source;
+
+	/**
+	 * object-level unique string that identifies tags of this instance on a
+	 * graph.
+	 */
+	protected String identifier;
+	
 	/**
 	 * Name of attribute used to get weight of edges.
 	 */
@@ -90,7 +167,8 @@ public class BellmanFord implements Algorithm {
 	 *            id of the source node
 	 */
 	public BellmanFord(String attribute, String sourceNode) {
-		this.source = sourceNode;
+		this.identifier = this.toString() + "/BellmanFord";
+		this.source_id = sourceNode;
 		this.weightAttribute = attribute;
 	}
 
@@ -101,7 +179,10 @@ public class BellmanFord implements Algorithm {
 	 *            id of the source node
 	 */
 	public void setSource(String nodeId) {
-		this.source = nodeId;
+		if((source_id == null || ! source_id.equals(nodeId)) && graph!=null){
+			source = graph.getNode(nodeId);
+		}
+		this.source_id = nodeId;	
 	}
 
 	/**
@@ -110,7 +191,7 @@ public class BellmanFord implements Algorithm {
 	 * @return id of the source node
 	 */
 	public String getSource() {
-		return source;
+		return source_id;
 	}
 
 	/**
@@ -131,19 +212,19 @@ public class BellmanFord implements Algorithm {
 	@SuppressWarnings("unchecked")
 	private void pathSetShortestPath_facilitate(Node current, Path path,
 			List<Path> paths) {
-		Node source = graph.getNode(this.source);
+		Node source = graph.getNode(this.source_id);
 
 		if (current != source) {
 			Node next = null;
 			ArrayList<? extends Edge> predecessors = (ArrayList<? extends Edge>) current
-					.getAttribute("BellmanFord.predecessors");
+					.getAttribute(identifier+".predecessors");
 			while (current != source && predecessors.size() == 1) {
 				Edge e = predecessors.get(0);
 				next = e.getOpposite(current);
 				path.add(current, e);
 				current = next;
 				predecessors = (ArrayList<? extends Edge>) current
-						.getAttribute("BellmanFord.predecessors");
+						.getAttribute(identifier+".predecessors");
 			}
 			if (current != source) {
 				for (Edge e : predecessors) {
@@ -168,8 +249,90 @@ public class BellmanFord implements Algorithm {
 	 */
 	public void init(Graph graph) {
 		this.graph = graph;
+		if (getSource() != null){
+			source = graph.getNode(getSource());
+		}
+	}
+	
+	
+	
+	/**
+	 * Set the unique identifier for this instance.
+	 * 
+	 * @see #getIdentifier()
+	 * 
+	 * @param identifier
+	 *            the unique identifier to set
+	 */
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
+	}
+	
+	/**
+	 * The unique identifier of this instance. Used to tag attributes in the graph.
+	 * @return the unique identifier of this graph.
+	 */
+	public String getIdentifier() {
+		return this.identifier; 
 	}
 
+	/**
+	 * Returns the value of the shortest path between the source node and the
+	 * given target according to the attribute specified in the constructor. If
+	 * <code>target</code> is not in the same connected component as the source
+	 * node, then the method returns <code>Double.POSITIVE_INFINITY</code>
+	 * (Infinity).
+	 * 
+	 * @param target
+	 *            The endpoint of the path to compute from the source node given
+	 *            in the constructor.
+	 * @return A numerical value that represent the distance of the shortest
+	 *         path.
+	 */
+	public double getShortestPathValue(Node target) {
+		Double d = target.getAttribute(identifier+".distance");
+		if (d != null)
+			return d;
+		return Double.POSITIVE_INFINITY;
+	}
+	
+	/**
+	 * Returns the shortest path between the source node and one given target. 
+	 * If multiple shortest paths exist, one of them is returned at random.
+	 * 
+	 * @param target
+	 *            the target of the shortest path starting at the source node
+	 *            given in the constructor.
+	 * @return A {@link org.graphstream.graph.Path} object that constrains the
+	 *         list of nodes and edges that constitute it.
+	 */
+	@SuppressWarnings("unchecked")
+	public Path getShortestPath(Node target) {
+		Path p = new Path();
+		if (target == source ) {
+			return p;
+		}
+		boolean noPath = false;
+		Node v = target;
+		while (v != source && !noPath) {
+			ArrayList<? extends Edge> list = (ArrayList<? extends Edge>) v
+					.getAttribute(identifier+".predecessors");
+			if (list == null) {
+				noPath = true;
+			} else {
+				Edge parentEdge = list.get(0);
+				p.add(v, parentEdge);
+				v = parentEdge.getOpposite(v);
+			}
+		}
+		return p;
+	}
+
+	
+	
+	
+	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -177,39 +340,41 @@ public class BellmanFord implements Algorithm {
 	 */
 	@SuppressWarnings("unchecked")
 	public void compute() {
-		Node source = graph.getNode(this.source);
+		Node source = graph.getNode(this.source_id);
 
 		// Step 1: Initialize graph
 
+		
 		for (Node n : graph) {
 			if (n == source)
-				n.addAttribute("BellmanFord.distance", 0.0);
+				n.addAttribute(identifier+".distance", 0.0);
 			else
-				n.addAttribute("BellmanFord.distance");
+				n.addAttribute(identifier+".distance", Double.POSITIVE_INFINITY);
 
-			n.addAttribute("BellmanFord.predecessors");
+			//n.addAttribute(identifier+".predecessors",(Object)null);
 		}
-
+	
+		
 		// Step 2: relax edges repeatedly
 
 		for (int i = 0; i < graph.getNodeCount(); i++) {
 			for (Edge e : graph.getEachEdge()) {
 				Node n0 = e.getNode0();
 				Node n1 = e.getNode1();
-				Double d0 = (Double) n0.getAttribute("BellmanFord.distance");
-				Double d1 = (Double) n1.getAttribute("BellmanFord.distance");
+				Double d0 = (Double) n0.getAttribute(identifier+".distance");
+				Double d1 = (Double) n1.getAttribute(identifier+".distance");
 
 				Double we = (Double) e.getAttribute(weightAttribute);
 				if (we == null)
 					throw new NumberFormatException(
-							"org.miv.graphstream.algorithm.BellmanFord: Problem with attribute \""
+							"org.graphstream.algorithm.BellmanFord: Problem with attribute \""
 									+ weightAttribute + "\" on edge " + e);
 
 				if (d0 != null) {
 					if (d1 == null || d1 >= d0 + we) {
-						n1.addAttribute("BellmanFord.distance", d0 + we);
+						n1.addAttribute(identifier+".distance", d0 + we);
 						ArrayList<Edge> predecessors = (ArrayList<Edge>) n1
-								.getAttribute("BellmanFord.predecessors");
+								.getAttribute(identifier+".predecessors");
 
 						if (d1 != null && d1 == d0 + we) {
 							if (predecessors == null) {
@@ -222,7 +387,7 @@ public class BellmanFord implements Algorithm {
 							predecessors.add(e);
 						}
 
-						n1.addAttribute("BellmanFord.predecessors",
+						n1.addAttribute(identifier+".predecessors",
 								predecessors);
 					}
 				}
@@ -234,8 +399,8 @@ public class BellmanFord implements Algorithm {
 		for (Edge e : graph.getEachEdge()) {
 			Node n0 = e.getNode0();
 			Node n1 = e.getNode1();
-			Double d0 = (Double) n0.getAttribute("BellmanFord.distance");
-			Double d1 = (Double) n1.getAttribute("BellmanFord.distance");
+			Double d0 = (Double) n0.getAttribute(identifier+".distance");
+			Double d1 = (Double) n1.getAttribute(identifier+".distance");
 
 			Double we = (Double) e.getAttribute(weightAttribute);
 

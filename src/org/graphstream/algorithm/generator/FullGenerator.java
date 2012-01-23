@@ -1,26 +1,35 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.generator;
+
+import org.graphstream.graph.Node;
 
 /**
  * Full graph generator.
@@ -63,7 +72,7 @@ public class FullGenerator extends BaseGenerator {
 	 */
 	public FullGenerator() {
 		super();
-		keepNodesId = true;
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -76,7 +85,7 @@ public class FullGenerator extends BaseGenerator {
 	 */
 	public FullGenerator(boolean directed, boolean randomlyDirectedEdges) {
 		super(directed, randomlyDirectedEdges);
-		keepNodesId = true;
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -96,7 +105,7 @@ public class FullGenerator extends BaseGenerator {
 	public FullGenerator(boolean directed, boolean randomlyDirectedEdges,
 			String nodeAttribute, String edgeAttribute) {
 		super(directed, randomlyDirectedEdges, nodeAttribute, edgeAttribute);
-		keepNodesId = true;
+		setUseInternalGraph(true);
 	}
 
 	/**
@@ -120,20 +129,11 @@ public class FullGenerator extends BaseGenerator {
 
 		addNode(id);
 
-		for (String otherId : nodes) {
-			if (otherId != id) // We can compare refs safely here.
-				addEdge(null, id, otherId);
+		for (Node n : internalGraph.getEachNode()) {
+			if (!n.getId().equals(id)) // We can compare refs safely here.
+				addEdge(null, id, n.getId());
 		}
 
 		return true;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.algorithm.generator.Generator#end()
-	 */
-	public void end() {
-
 	}
 }

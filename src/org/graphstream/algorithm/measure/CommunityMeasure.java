@@ -1,27 +1,31 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Project copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
- *
- * This file is copyright 2010
- *  Guillaume-Jean Herbiet
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.measure;
 
@@ -71,7 +75,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	/**
 	 * Last value computed.
 	 */
-	protected float M;
+	protected double M;
 
 	/**
 	 * New measure algorithm with a given marker for communities.
@@ -100,7 +104,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @complexity O(1)
 	 * @return The last computed measure.
 	 */
-	public float getLastComputedValue() {
+	public double getLastComputedValue() {
 		return M;
 	}
 
@@ -110,7 +114,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @complexity Depends on the actual measure
 	 * @return The current measure.
 	 */
-	public float getMeasure() {
+	public double getMeasure() {
 		compute();
 		return M;
 	}
@@ -160,6 +164,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @see org.graphstream.stream.Sink#nodeAdded(java.lang.String, long,
 	 * java.lang.String)
 	 */
+	@Override
 	public void nodeAdded(String graphId, long timeId, String nodeId) {
 		Node n = graph.getNode(nodeId);
 		assignNode(nodeId, n.getAttribute(marker), communities);
@@ -171,6 +176,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @see org.graphstream.stream.Sink#nodeRemoved(java.lang.String, long,
 	 * java.lang.String)
 	 */
+	@Override
 	public void nodeRemoved(String graphId, long timeId, String nodeId) {
 		Node n = graph.getNode(nodeId);
 		unassignNode(nodeId, n.getAttribute(marker), communities);
@@ -182,6 +188,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @see org.graphstream.stream.Sink#edgeAdded(java.lang.String, long,
 	 * java.lang.String, java.lang.String, java.lang.String, boolean)
 	 */
+	@Override
 	public void edgeAdded(String graphId, long timeId, String edgeId,
 			String fromNodeId, String toNodeId, boolean directed) {
 		graphChanged = true;
@@ -193,6 +200,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @see org.graphstream.stream.Sink#edgeRemoved(java.lang.String, long,
 	 * java.lang.String)
 	 */
+	@Override
 	public void edgeRemoved(String graphId, long timeId, String edgeId) {
 		graphChanged = true;
 	}
@@ -202,6 +210,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * 
 	 * @see org.graphstream.stream.Sink#graphCleared(java.lang.String, long)
 	 */
+	@Override
 	public void graphCleared(String graphId, long timeId) {
 		graphChanged = true;
 	}
@@ -212,6 +221,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @see org.graphstream.stream.Sink#nodeAttributeAdded(java.lang.String,
 	 * long, java.lang.String, java.lang.String, java.lang.Object)
 	 */
+	@Override
 	public void nodeAttributeAdded(String graphId, long timeId, String nodeId,
 			String attribute, Object value) {
 		nodeAttributeChanged(graphId, timeId, nodeId, attribute, null, value);
@@ -224,6 +234,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * long, java.lang.String, java.lang.String, java.lang.Object,
 	 * java.lang.Object)
 	 */
+	@Override
 	public void nodeAttributeChanged(String graphId, long timeId,
 			String nodeId, String attribute, Object oldValue, Object newValue) {
 		if (attribute.equals(marker) && oldValue != newValue) {
@@ -269,11 +280,11 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @param oldValue
 	 * @param assignment
 	 */
-	protected void unassignNode(String nodeId, Object oldVlaue,
+	protected void unassignNode(String nodeId, Object oldValue,
 			HashMap<Object, HashSet<Node>> assignment) {
 		Node node = graph.getNode(nodeId);
 		if (node != null) {
-			Object communityKey = oldVlaue;
+			Object communityKey = oldValue;
 
 			if (communityKey == null)
 				communityKey = "NULL_COMMUNITY";

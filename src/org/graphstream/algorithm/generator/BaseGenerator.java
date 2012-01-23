@@ -1,32 +1,39 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.generator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Random;
 
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.implementations.AdjacencyListGraph;
 import org.graphstream.stream.SourceBase;
 
 /**
@@ -59,75 +66,6 @@ import org.graphstream.stream.SourceBase;
  * @since 2007
  */
 public abstract class BaseGenerator extends SourceBase implements Generator {
-	/**
-	 * Defines data which is stored when {@link #keepNodesId} is enabled.
-	 */
-	protected class NodeKeepData {
-		/**
-		 * List of edge ids adjacent to the node.
-		 */
-		LinkedList<String> edges;
-
-		/**
-		 * Remembers this edge id as an adjacent edge.
-		 * 
-		 * @param id
-		 *            id of the adjacent edge
-		 */
-		void keepEdge(String id) {
-			if (edges == null)
-				edges = new LinkedList<String>();
-
-			if (!edges.contains(id))
-				edges.add(id);
-		}
-
-		/**
-		 * Removes an edge id from adjacent edge list.
-		 * 
-		 * @param id
-		 *            id of the old adjacent edge
-		 */
-		void unkeepEdge(String id) {
-			if (edges != null)
-				edges.remove(id);
-		}
-	}
-
-	/**
-	 * Defines data which is stored when {@link #keepEdgesId} is enabled.
-	 */
-	protected class EdgeKeepData {
-		/**
-		 * Source and target node ids of the edge.
-		 */
-		String src, trg;
-
-		/**
-		 * Build the data.
-		 * 
-		 * @param src
-		 *            source node id
-		 * @param trg
-		 *            target node id
-		 */
-		EdgeKeepData(String src, String trg) {
-			keepNodes(src, trg);
-		}
-
-		/**
-		 * Set source and target node ids.
-		 * 
-		 * @param src
-		 *            source node id
-		 * @param trg
-		 *            target node id
-		 */
-		void keepNodes(String src, String trg) {
-			this.src = src;
-			this.trg = trg;
-		}
-	}
 
 	// Attributes
 
@@ -156,45 +94,12 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	/**
 	 * If node attributes are added, in which range are the numbers chosen ?.
 	 */
-	protected float[] nodeAttributeRange = new float[2];
+	protected double[] nodeAttributeRange = new double[2];
 
 	/**
 	 * If edge attributes are added, in which range are the numbers chosen ?.
 	 */
-	protected float[] edgeAttributeRange = new float[2];
-
-	/**
-	 * List of all generated nodes so far. Used to create edges toward all other
-	 * nodes at each step.
-	 */
-	protected ArrayList<String> nodes = new ArrayList<String>();
-
-	/**
-	 * List of all generated edges.
-	 */
-	protected ArrayList<String> edges = new ArrayList<String>();
-
-	/**
-	 * Data linked to nodes when {@link keepNodesId} is enabled.
-	 */
-	protected HashMap<String, NodeKeepData> nodesData = new HashMap<String, NodeKeepData>();
-
-	/**
-	 * Data linked to edges when {@link keepEdgesId} is enabled.
-	 */
-	protected HashMap<String, EdgeKeepData> edgesData = new HashMap<String, EdgeKeepData>();
-
-	/**
-	 * If enabled, keep node ids and essential data. In some generator,
-	 * algorithm needs to know what has been previously build.
-	 */
-	protected boolean keepNodesId = false;
-
-	/**
-	 * If enabled, keep edge ids and essential data. In some generator,
-	 * algorithm needs to know what has been previously build.
-	 */
-	protected boolean keepEdgesId = false;
+	protected double[] edgeAttributeRange = new double[2];
 
 	/**
 	 * The random number generator.
@@ -210,6 +115,24 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 * Set the edge label attribute using the identifier?.
 	 */
 	protected boolean addEdgeLabels = false;
+
+	/**
+	 * Flag to know if generator has to use an internal graph. Generator which
+	 * want to use this feature have to use the
+	 * {@link #setUseInternalGraph(boolean)} method to set this flag.
+	 */
+	private boolean useInternalGraph;
+
+	/**
+	 * When {@link #useInternalGraph} is on, nodes and edges are stored in this
+	 * graph.
+	 */
+	protected Graph internalGraph;
+
+	/**
+	 * Used to created unique generatorId.
+	 */
+	private volatile static int generatorId;
 
 	// Constructors
 
@@ -232,7 +155,7 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 *            randomly.
 	 */
 	public BaseGenerator(boolean directed, boolean randomlyDirectedEdges) {
-		super("generator");
+		super(String.format("generator-08x", generatorId++));
 		setDirectedEdges(directed, randomlyDirectedEdges);
 
 		nodeAttributeRange[0] = 0;
@@ -267,33 +190,15 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	// Commands
 
 	/**
-	 * Enable storage of node data. Id of nodes and adjacent edges will be
-	 * stored.
+	 * End the graph generation by finalizing it. Once the {@link #nextEvents()}
+	 * method returned false (or even if you stop before), this method must be
+	 * called to finish the graph.
+	 * 
+	 * In addition, BaseGenerator adds a "clear" operations that removes all the
+	 * kept edges and nodes identifiers and the associated data.
 	 */
-	protected void enableKeepNodesId() {
-		keepNodesId = true;
-	}
-
-	/**
-	 * Disable storage of node data.
-	 */
-	protected void disableKeepNodesId() {
-		keepNodesId = false;
-	}
-
-	/**
-	 * Enable storage of edge data. Id of edges, source node id and target node
-	 * id will be stored.
-	 */
-	protected void enableKeepEdgesId() {
-		keepEdgesId = true;
-	}
-
-	/**
-	 * Disable storage of edge data.
-	 */
-	protected void disableKeepEdgesId() {
-		keepEdgesId = false;
+	public void end() {
+		clearKeptData();
 	}
 
 	/**
@@ -351,7 +256,7 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 * 
 	 * @param name
 	 *            The attribute name.
-	 * @see #setNodeAttributesRange(float, float)
+	 * @see #setNodeAttributesRange(double, double)
 	 * @see #removeNodeAttribute(String)
 	 */
 	public void addNodeAttribute(String name) {
@@ -378,7 +283,7 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 * 
 	 * @param name
 	 *            The attribute name.
-	 * @see #setEdgeAttributesRange(float, float)
+	 * @see #setEdgeAttributesRange(double, double)
 	 * @see #removeEdgeAttribute(String)
 	 */
 	public void addEdgeAttribute(String name) {
@@ -405,7 +310,7 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 * 
 	 * @see #addNodeAttribute(String)
 	 */
-	public void setNodeAttributesRange(float low, float hi) {
+	public void setNodeAttributesRange(double low, double hi) {
 		nodeAttributeRange[0] = low;
 		nodeAttributeRange[1] = hi;
 	}
@@ -416,9 +321,43 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 * 
 	 * @see #addEdgeAttribute(String)
 	 */
-	public void setEdgeAttributesRange(float low, float hi) {
+	public void setEdgeAttributesRange(double low, double hi) {
 		edgeAttributeRange[0] = low;
 		edgeAttributeRange[1] = hi;
+	}
+
+	/**
+	 * Enable or disable the use of an internal graph. If enable, nodes, edges
+	 * and their attributes are stored in an internal graph.
+	 * 
+	 * This is useful if the generator needs to remember informations like node
+	 * id.
+	 * 
+	 * @param on
+	 *            true if the internal graph has to be enable.
+	 */
+	public void setUseInternalGraph(boolean on) {
+		useInternalGraph = on;
+
+		if (!on && internalGraph != null) {
+			internalGraph.clear();
+			internalGraph = null;
+		}
+
+		if (on && internalGraph == null) {
+			internalGraph = new AdjacencyListGraph(getClass().getName()
+					+ "-internal_graph");
+			internalGraph.setStrict(false);
+		}
+	}
+
+	/**
+	 * Flag to know if an internal graph is in use.
+	 * 
+	 * @return true if nodes and edges are stored in an internal graph.
+	 */
+	public boolean isUsingInternalGraph() {
+		return useInternalGraph;
 	}
 
 	/**
@@ -432,10 +371,14 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 * @param y
 	 *            The node ordinate.
 	 */
-	protected void addNode(String id, float x, float y) {
+	protected void addNode(String id, double x, double y) {
 		addNode(id);
 		sendNodeAttributeAdded(sourceId, id, "xy", new Double[] {
 				new Double(x), new Double(y) });
+
+		if (useInternalGraph)
+			internalGraph.getNode(id).addAttribute("xy",
+					(Object) (new Double[] { new Double(x), new Double(y) }));
 	}
 
 	/**
@@ -450,17 +393,18 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 		if (addNodeLabels)
 			sendNodeAttributeAdded(sourceId, id, "label", id);
 
-		float value;
+		if (useInternalGraph)
+			internalGraph.addNode(id);
+
+		double value;
 
 		for (String attr : nodeAttributes) {
-			value = (random.nextFloat() * (nodeAttributeRange[1] - nodeAttributeRange[0]))
+			value = (random.nextDouble() * (nodeAttributeRange[1] - nodeAttributeRange[0]))
 					+ nodeAttributeRange[0];
 			sendNodeAttributeAdded(sourceId, id, attr, value);
-		}
 
-		if (keepNodesId) {
-			nodes.add(id);
-			nodesData.put(id, new NodeKeepData());
+			if (useInternalGraph)
+				internalGraph.getNode(id).addAttribute(attr, value);
 		}
 	}
 
@@ -471,18 +415,8 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	 *            id of the node to remove
 	 */
 	protected void delNode(String id) {
-		if (keepNodesId) {
-			if (keepEdgesId) {
-				NodeKeepData nkd = nodesData.get(id);
-
-				if (nkd.edges != null)
-					while (nkd.edges.size() > 0)
-						delEdge(nkd.edges.peek());
-			}
-
-			nodes.remove(id);
-			nodesData.remove(id);
-		}
+		if (useInternalGraph)
+			internalGraph.removeNode(id);
 
 		sendNodeRemoved(sourceId, id);
 	}
@@ -510,23 +444,19 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 
 		sendEdgeAdded(sourceId, id, from, to, directed);
 
+		if (useInternalGraph)
+			internalGraph.addEdge(id, from, to, directed);
+
 		if (addEdgeLabels)
 			sendEdgeAttributeAdded(sourceId, id, "label", id);
 
 		for (String attr : edgeAttributes) {
-			float value = (random.nextFloat() * (edgeAttributeRange[1] - edgeAttributeRange[0]))
+			double value = (random.nextDouble() * (edgeAttributeRange[1] - edgeAttributeRange[0]))
 					+ edgeAttributeRange[0];
 			sendEdgeAttributeAdded(sourceId, id, attr, value);
-		}
 
-		if (keepEdgesId) {
-			edges.add(id);
-
-			if (keepNodesId) {
-				edgesData.put(id, new EdgeKeepData(from, to));
-				nodesData.get(from).keepEdge(id);
-				nodesData.get(to).keepEdge(id);
-			}
+			if (useInternalGraph)
+				internalGraph.getEdge(id).addAttribute(attr, value);
 		}
 	}
 
@@ -539,15 +469,18 @@ public abstract class BaseGenerator extends SourceBase implements Generator {
 	protected void delEdge(String edgeId) {
 		sendEdgeRemoved(sourceId, edgeId);
 
-		if (keepEdgesId) {
-			edges.remove(edgeId);
+		if (useInternalGraph)
+			internalGraph.removeEdge(edgeId);
+	}
 
-			if (keepNodesId) {
-				EdgeKeepData ekd = edgesData.get(edgeId);
-
-				nodesData.get(ekd.src).unkeepEdge(edgeId);
-				nodesData.get(ekd.trg).unkeepEdge(edgeId);
-			}
-		}
+	/**
+	 * Clear the internal graph if {@link #useInternalGraph} is enable.
+	 * 
+	 * This method is called in {@link #end()} to ensure the next generation
+	 * will start freshly anew.
+	 */
+	protected void clearKeptData() {
+		if (useInternalGraph)
+			internalGraph.clear();
 	}
 }
