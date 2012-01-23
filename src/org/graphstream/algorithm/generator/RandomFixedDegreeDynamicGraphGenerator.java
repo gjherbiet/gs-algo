@@ -1,26 +1,35 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.generator;
+
+import org.graphstream.algorithm.Toolkit;
 
 /**
  * This is a graph generator that generates dynamic random graphs.
@@ -82,17 +91,15 @@ package org.graphstream.algorithm.generator;
  * other properties), just by adding some constraints/characteristics on each
  * node?
  * 
- * @author Fr&eacute;d&eacute;ric Guinand
+ * @author Frédéric Guinand
  * @since 20080616
  */
-public class RandomFixedDegreeDynamicGraphGenerator
-	extends BaseGenerator
-{
+public class RandomFixedDegreeDynamicGraphGenerator extends BaseGenerator {
 	/**
 	 * Average number of vertices.
 	 */
 	protected int nbVertices;
-	
+
 	/**
 	 * Limit for the mean degree of nodes.
 	 */
@@ -108,12 +115,12 @@ public class RandomFixedDegreeDynamicGraphGenerator
 	 * Current step of the generator.
 	 */
 	protected int step = 1;
-	
+
 	/**
 	 * Influence the number of nodes created at each step.
 	 */
 	protected int deltaStep = 100;
-	
+
 	/**
 	 * Used to generate node ids.
 	 */
@@ -125,11 +132,10 @@ public class RandomFixedDegreeDynamicGraphGenerator
 	 * 
 	 * @see #RandomFixedDegreeDynamicGraphGenerator(int, double, double)
 	 */
-	public RandomFixedDegreeDynamicGraphGenerator()
-	{
-		this(50,5,0.1f);
+	public RandomFixedDegreeDynamicGraphGenerator() {
+		this(50, 5, 0.1f);
 	}
-	
+
 	/**
 	 * Create a new RandomFixedDegreeDynamicGraphGenerator generator.
 	 * 
@@ -140,39 +146,36 @@ public class RandomFixedDegreeDynamicGraphGenerator
 	 * @param nervousness
 	 *            The nervousness.
 	 */
-	public RandomFixedDegreeDynamicGraphGenerator( int nbVertices,
-			double meanDegreeLimit, double nervousness )
-	{
-		enableKeepNodesId();
-		enableKeepEdgesId();
-		
-		this.nbVertices      = nbVertices;
+	public RandomFixedDegreeDynamicGraphGenerator(int nbVertices,
+			double meanDegreeLimit, double nervousness) {
+		setUseInternalGraph(true);
+
+		this.nbVertices = nbVertices;
 		this.meanDegreeLimit = meanDegreeLimit;
-		this.nervousness     = nervousness;
+		this.nervousness = nervousness;
 	}
-	
+
 	/**
 	 * This method computes the mean degree of the graph.
 	 */
-	public double meanDegree()
-	{
-		return 2.0 * edges.size() / (double) nodes.size();
+	public double meanDegree() {
+		return 2.0 * internalGraph.getEdgeCount()
+				/ (double) internalGraph.getNodeCount();
 	}
-	
-	protected String getEdgeId( String src, String trg )
-	{
-		if( src.compareTo(trg) < 0 )
-			return String.format( "%s_%s", src, trg );
-		
-		return String.format( "%s_%s", trg, src );
+
+	protected String getEdgeId(String src, String trg) {
+		if (src.compareTo(trg) < 0)
+			return String.format("%s_%s", src, trg);
+
+		return String.format("%s_%s", trg, src);
 	}
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#begin()
 	 */
-	public void begin()
-	{
+	public void begin() {
 		step = 0;
 	}
 
@@ -182,70 +185,65 @@ public class RandomFixedDegreeDynamicGraphGenerator
 	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#nextEvents()
 	 */
-	public boolean nextEvents()
-	{
+	public boolean nextEvents() {
 		int nbCreations, nbSuppressions, nbCreationsEdges;
 		String dead, source, dest;
-		
-		sendStepBegins(sourceId,step);
-		
-		nbSuppressions = (int) ( random.nextFloat() * ( nodes.size() * nervousness ) );
-		
-		for( int r = 1; r <= nbSuppressions; r++ )
-		{
-			dead = nodes.get(random.nextInt(nodes.size()));
+
+		sendStepBegins(sourceId, step);
+
+		nbSuppressions = (int) (random.nextFloat() * (internalGraph
+				.getNodeCount() * nervousness));
+
+		for (int r = 1; r <= nbSuppressions; r++) {
+			dead = Toolkit.randomNode(internalGraph, random).getId();
 			delNode(dead);
 		}
 
-		nbCreations = (int) ( random.nextFloat() * ( ( nbVertices - nodes.size() )
-		        * Math.log( step ) / Math.log( step + deltaStep ) ) );
-		
-		for( int c = 1; c <= nbCreations; c++ )
-		{
-			String nodeId = String.format( "%d", currentNodeId++ );
-			
+		nbCreations = (int) (random.nextFloat() * ((nbVertices - internalGraph
+				.getNodeCount()) * Math.log(step) / Math.log(step + deltaStep)));
+
+		for (int c = 1; c <= nbCreations; c++) {
+			String nodeId = String.format("%d", currentNodeId++);
+
 			addNode(nodeId);
 		}
 
 		double degreMoyen = meanDegree();
 
-		nbCreationsEdges = (int) ( random.nextFloat() * ( ( ( meanDegreeLimit - degreMoyen ) *
-				( nodes.size() / 2 ) ) * Math.log( step ) / Math.log( step + deltaStep ) ) );
-		
-		if( nodes.size() > 1 )
-		{
-			for( int c = 1; c <= nbCreationsEdges; c++ )
-			{
-				do
-				{
-					source 	= nodes.get(random.nextInt(nodes.size()));
-					dest 	= nodes.get(random.nextInt(nodes.size()));
-				}
-				while( source.equals(dest) );
+		nbCreationsEdges = (int) (random.nextFloat() * (((meanDegreeLimit - degreMoyen) * (internalGraph
+				.getNodeCount() / 2)) * Math.log(step) / Math.log(step
+				+ deltaStep)));
 
-				String idEdge = getEdgeId( source, dest );
+		if (internalGraph.getNodeCount() > 1) {
+			for (int c = 1; c <= nbCreationsEdges; c++) {
+				do {
+					source = Toolkit.randomNode(internalGraph, random).getId();
+					dest = Toolkit.randomNode(internalGraph, random).getId();
+				} while (source.equals(dest));
 
-				while( edges.contains(idEdge) || source.equals(dest) )
-				{
-					dest 	= nodes.get(random.nextInt(nodes.size()));
-					idEdge 	= getEdgeId( source, dest );
+				String idEdge = getEdgeId(source, dest);
+
+				while (internalGraph.getEdge(idEdge) != null || source.equals(dest)) {
+					dest = Toolkit.randomNode(internalGraph, random).getId();
+					idEdge = getEdgeId(source, dest);
 				}
 
-				addEdge( idEdge, source, dest );
+				addEdge(idEdge, source, dest);
 			}
 		}
-		
+
 		step++;
-		
+
 		return false;
 	}
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#end()
 	 */
-	public void end()
-	{
-		
+	@Override
+	public void end() {
+		super.end();
 	}
 }

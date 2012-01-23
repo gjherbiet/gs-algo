@@ -1,31 +1,39 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
@@ -34,574 +42,721 @@ import org.graphstream.graph.Path;
 
 /**
  * <p>
- * Dijkstra's algorithm is a greedy algorithm that solves the single-source
- * shortest path problem for a directed graph with non negative edge weights (<a
- * href="http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Wikipedia</a>).
+ * Dijkstra's algorithm computes the shortest paths from a given node called
+ * source to all the other nodes in a graph. It produces a shortest path tree
+ * rooted in the source. <b>This algorithm works only for nonnegative
+ * lengths.</b>
  * </p>
- * <p>
- * This length can be the absolute length of the path ( a path with 3 edges has
- * a length of 3), it can also be computed considering other constraints
- * situated on the edges or on the nodes.
- * </p>
- * <p>
- * Note that Dijkstra's algorithm only computes with non-negative values.
- * </p>
- * <p>
  * 
- * @complexity O(n^2 + m) with n the number of nodes and m the number of edges.
+ * <p>
+ * This implementation uses internally Fibonacci Heap, a data structure that
+ * makes it run faster for big graphs.
+ * </p>
  * 
- * @author Antoine Dutot
- * @author Yoann Pigné
+ * <h3>Length of a path</h3>
+ * 
+ * <p>
+ * Traditionally the length of a path is defined as the sum of the lengths of
+ * its edges. This implementation allows to take into account also the "lengths"
+ * of the nodes. This is done by a parameter of type {@link Element} passed in
+ * the constructors.
+ * </p>
+ * 
+ * <p>
+ * The lengths of individual elements (edges or/and nodes) are defined using
+ * another constructor parameter called {@code lengthAttribute}. If this
+ * parameter is {@code null}, the elements are considered to have unit lengths.
+ * In other words, the length of a path is the number of its edges or/and nodes.
+ * If the parameter is not null, the elements are supposed to have a numeric
+ * attribute named {@code lengthAttribute} used to store their lengths.
+ * </p>
+ * 
+ * <h3>Solutions</h3>
+ * 
+ * <p>
+ * Internal solution data is stored in attributes of the nodes of the underlying
+ * graph. The name of this attribute is another constructor parameter called
+ * {@code resultAttribute}. This name must be specified in order to avoid
+ * conflicts with existing attributes, but also to distinguish between solutions
+ * produced by different instances of this class working on the same graph (for
+ * example when computing shortest paths from two different sources). If not
+ * specified, a unique name is chosen automatically based on the hash code of
+ * the Dijkstra instance. The attributes store opaque internal objects and must
+ * not be accessed, modified or deleted. The only way to retrieve the solution
+ * is using different solution access methods.
+ * </p>
+ * 
+ * <h3>Usage</h3>
+ * 
+ * <p>
+ * A typical usage of this class involves the following steps:
+ * </p>
+ * <ul>
+ * <li>Instantiation using one of the constructors with appropriate parameters</li>
+ * <li>Initialization of the algorithm using {@link #init(Graph)}</li>
+ * <li>Computation of the shortest paths using {@link #compute()}</li>
+ * <li>Retrieving the solution using different solution access methods</li>
+ * <li>Cleaning up using {@link #clear()}</li>
+ * </ul>
+ * 
+ * <p>
+ * Note that if the graph changes after the call of {@link #compute()} the
+ * computed solution is no longer valid. In this case the behavior of the
+ * different solution access methods is undefined.
+ * </p>
+ * 
+ * <h3>Example</h3>
+ * 
+ * <pre>
+ * Graph graph = ...;
+ * 
+ * // Edge lengths are stored in an attribute called "length"
+ * // The length of a path is the sum of the lengths of its edges
+ * // The algorithm will store its results in attribute called "result"
+ * Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.edge, "result", "length");
+ * 	
+ * // Compute the shortest paths in g from A to all nodes
+ * dijkstra.init(graph);
+ * dijkstra.setSource(graph.getNode("A"));
+ * dijkstra.compute();
+ * 	
+ * // Print the lengths of all the shortest paths
+ * for (Node node : graph)
+ *     System.out.printf("%s->%s:%6.2f%n", dijkstra.getSource(), node, dijkstra.getPathLength(node));
+ * 	
+ * // Color in blue all the nodes on the shortest path form A to B
+ * for (Node node : dijkstra.getPathNodes(graph.getNode("B")))
+ *     node.addAttribute("ui.style", "fill-color: blue;");
+ * 	
+ * // Color in red all the edges in the shortest path tree
+ * for (Edge edge : dijkstra.getTreeEdges())
+ *     edge.addAttribute("ui.style", "fill-color: red;");
+ * 
+ * // Print the shortest path from A to B
+ * System.out.println(dijkstra.getPath(graph.getNode("B"));
+ * 
+ * // Build a list containing the nodes in the shortest path from A to B
+ * // Note that nodes are added at the beginning of the list
+ * // because the iterator traverses them in reverse order, from B to A
+ * List &lt;Node&gt; list1 = new ArrayList&lt;Node&gt;();
+ * for (Node node : dijkstra.getPathNodes(graph.getNode("B")))
+ *     list1.add(0, node);
+ * 
+ * // A shorter but less efficient way to do the same thing
+ * List&lt;Node&gt; list2 = dijkstra.getPath(graph.getNode("B")).getNodePath();
+ * </pre>
+ * 
+ * @author Stefan Balev
  */
-public class Dijkstra
-	implements Algorithm
-{
-	/**
-	 * Graph being used on computation.
-	 */
-	protected Graph graph;
-	
-	/**
-	 * Source node of last computation.
-	 */
-	protected Node source;
-	
-	/**
-	 * Id of the source node which will be used on the next computation.
-	 */
-	protected String sourceNodeId = null;
-	
-	/**
-	 * object-level unique string that identifies tags of this instance on a
-	 * graph.
-	 */
-	protected String parentEdgesString;
+public class Dijkstra implements Algorithm {
+	protected static class Data {
+		FibonacciHeap<Double, Node>.Node fn;
+		Edge edgeFromParent;
+		double distance;
+	}
 
 	/**
-	 * Distances depending on the observed attribute.
+	 * This enumeration is used to specify how the length of a path is computed
+	 * 
+	 * @author Stefan Balev
 	 */
-	protected Hashtable<Node, Double> distances;
+	public static enum Element {
+		/**
+		 * The length of a path is the sum of the lengths of its edges.
+		 */
+		EDGE,
+		/**
+		 * The length of a path is the sum of the lengths of its nodes.
+		 */
+		NODE,
+		/**
+		 * The length of a path is the sum of the lengths of its edges and
+		 * nodes.
+		 */
+		EDGE_AND_NODE;
+	}
 
-	/**
-	 * Lengths in number of links.
-	 */
-	protected Hashtable<Node, Double> length;
-
-	/**
-	 * The attribute considered for the distance computation.
-	 */
-	protected String attribute;
-	
-	/**
-	 * The kind of element observed in the graph.
-	 */
 	protected Element element;
-	
-	/**
-	 * Same as {@link #Dijkstra(Element, String, String)} but source node id
-	 * will be set to null.
-	 *  
-	 * @param element
-	 *            The kind of element observed in the graph.
-	 * @param attribute
-	 *            The attribute considered for the distance computation.
-	 */
-	public Dijkstra( Element element, String attribute )
-	{
-		this( element, attribute, null );
+	protected String resultAttribute;
+	protected String lengthAttribute;
+	protected Graph graph;
+	protected Node source;
+
+	// *** Helpers ***
+
+	protected double getLength(Edge edge, Node dest) {
+		double lenght = 0;
+		if (element != Element.NODE)
+			lenght += lengthAttribute == null ? 1 : edge
+					.getNumber(lengthAttribute);
+		if (element != Element.EDGE)
+			lenght += lengthAttribute == null ? 1 : dest
+					.getNumber(lengthAttribute);
+		if (lenght < 0)
+			throw new IllegalStateException("Edge " + edge.getId()
+					+ " has negative lenght " + lenght);
+		return lenght;
 	}
-	
+
+	protected double getSourceLength() {
+		if (element == Element.EDGE)
+			return 0;
+		return lengthAttribute == null ? 1 : source.getNumber(lengthAttribute);
+	}
+
+	// *** Constructors ***
+
 	/**
-	 * Computes the Dijkstra's algorithm on the given graph starting from the
-	 * given source node, considering the given attribute locates on the given
-	 * kind of elements (nodes or edges).
+	 * Constructs an instance with the specified parameters.
 	 * 
 	 * @param element
-	 *            The kind of element observed in the graph.
-	 * @param attribute
-	 *            The attribute considered for the distance computation.
-	 * @param sourceNodeId
-	 *            Id of the root node of the shortest path tree.
+	 *            Graph elements (edges or/and nodes) used to compute the path
+	 *            lengths. If {@code null}, the length of the path is computed
+	 *            using edges.
+	 * @param resultAttribute
+	 *            Attribute name used to store internal solution data in the
+	 *            nodes of the graph. If {@code null}, a unique name is chosen
+	 *            automatically.
+	 * @param lengthAttribute
+	 *            Attribute name used to define individual element lengths. If
+	 *            {@code null} the length of the elements is considered to be
+	 *            one.
 	 */
-	public Dijkstra( Element element, String attribute, String sourceNodeId )
-	{
-		this.parentEdgesString = this.toString()+"/ParentEdges";
-		this.distances         = new Hashtable<Node, Double>();
-		this.length            = new Hashtable<Node, Double>();
-		
-		this.attribute    = attribute;
-		this.element      = element;
-		this.sourceNodeId = sourceNodeId;
+	public Dijkstra(Element element, String resultAttribute,
+			String lengthAttribute) {
+		this.element = element == null ? Element.EDGE : element;
+		this.resultAttribute = resultAttribute == null ? toString()
+				+ "_result_" : resultAttribute;
+		this.lengthAttribute = lengthAttribute;
+		graph = null;
+		source = null;
 	}
 
 	/**
-	 * Set the id of the source node which will be used on the computation.
-	 * 
-	 * @param sourceNodeId id of the source node
+	 * Constructs an instance in which the length of the path is considered to
+	 * be the number of edges. Unique result attribute is chosen automatically.
 	 */
-	public void setSource( String sourceNodeId )
-	{
-		this.sourceNodeId = sourceNodeId;
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void facilitate_getShortestPaths( List<Edge> g, Node v )
-	{
-		if( v == source )
-		{
-			return;
-		}
-		ArrayList<Edge> list = (ArrayList<Edge>) v.getAttribute( parentEdgesString );
-		if( list == null )
-		{
-			//System.err.println( "The list of parent Edges  is null, v=" + v.toString() + " source=" + source.toString() );
-		}
-		else
-		{
-			for( Edge l: list )
-			{
-				if(! g.contains(l))
-				{
-					g.add( l );
-					facilitate_getShortestPaths( g, l.getOpposite( v ) );
-				}
-			}
-		}
+	public Dijkstra() {
+		this(null, null, null);
 	}
 
+	// *** Some basic methods ***
+
 	/**
-	 * Returns the shortest path between the source node and one given target
-	 * one. If multiple shortest paths exist, a of them is returned at random.
+	 * Dijkstra's algorithm computes shortest paths from a given source node to
+	 * all nodes in a graph. This method returns the source node.
 	 * 
-	 * @param target
-	 *            the target of the shortest path starting at the source node
-	 *            given in the constructor.
-	 * @return A {@link org.graphstream.graph.Path} object that constrains the
-	 *         list of nodes and edges that constitute it.
+	 * @return the source node
+	 * @see #setSource(Node)
 	 */
 	@SuppressWarnings("unchecked")
-    public Path getShortestPath( Node target )
-	{
-		Path p = new Path();
-		if( target == source )
-		{
-			return p;
-		}
-		boolean noPath = false;
-		Node v = target;
-		while( v != source && !noPath )
-		{
-			ArrayList<? extends Edge> list = (ArrayList<? extends Edge>) v.getAttribute( parentEdgesString );
-			if( list == null )
-			{
-				noPath = true;
+	public <T extends Node> T getSource() {
+		return (T) source;
+	}
+
+	/**
+	 * Dijkstra's algorithm computes shortest paths from a given source node to
+	 * all nodes in a graph. This method sets the source node.
+	 * 
+	 * @param source
+	 *            The new source node.
+	 * @see #getSource()
+	 */
+	public void setSource(Node source) {
+		this.source = source;
+	}
+
+	/**
+	 * Removes the attributes used to store internal solution data in the nodes
+	 * of the graph. Use this method to free memory. Solution access methods
+	 * must not be used after calling this method.
+	 */
+	public void clear() {
+		for (Node node : graph) {
+			Data data = node.getAttribute(resultAttribute);
+			if (data != null) {
+				data.fn = null;
+				data.edgeFromParent = null;
 			}
-			else
-			{
-				Edge parentEdge = list.get( 0 );
-
-				// --- DEBUG ---
-				// if( parentEdge == null )
-				// {
-				// System.out.println( "parentEdge is null, v=" + v.toString() +
-				// " source=" + source.toString() );
-				// }
-
-				p.add( v, parentEdge );
-				v = parentEdge.getOpposite( v );
-			}
-		}
-		return p;
-	}
-
-	/**
-	 * Returns the weight of the shortest path tree : The of of the distance of all the nodes.
-	 * @return the sum of the distances.
-	 */
-	public double treeWeight()
-	{
-		double weight=0;
-		for(Double d : distances.values())
-		{
-			weight +=d.doubleValue();
-		}
-		return weight;
-	}
-	
-	/**
-	 * Return the set of edges involved in the shortest path tree.
-	 * @return The set of edges.
-	 */
-	@SuppressWarnings("unchecked")
-    public List<Edge> treeEdges()
-	{
-		ArrayList<Edge> treeEdges = new ArrayList<Edge>();
-		Iterator<Node> it = distances.keySet().iterator();
-		while(it.hasNext())
-		{
-			Node n = it.next();
-			ArrayList<Edge> list = (ArrayList<Edge>) n.getAttribute( parentEdgesString );
-			if(list != null)
-				treeEdges.addAll( list );
-		}
-		
-		return treeEdges;
-	}
-	
-	/**
-	 * <h2 style="color:#F16454;" >WARNING</h2>
-	 * <p style="background-color:#F1C4C4; color:black;">
-	 * This method tries to construct ALL the possible paths form the source to
-	 * <code>end</code>. This may result in a huge number of paths, you may
-	 * even crash the VM because of memory consumption.
-	 * </p>
-	 * 
-	 * @param end
-	 *            The destination to which shortest paths are computed.
-	 * @return a list of shortest paths given with
-	 *         {@link org.graphstream.graph.Path} objects. The List is empty
-	 *         if <code>end</code> is not in the same connected component as
-	 *         the source node.
-	 */
-	public List<Path> getPathSetShortestPaths( Node end )
-	{
-		ArrayList<Path> paths = new ArrayList<Path>();
-		pathSetShortestPath_facilitate( end, new Path(), paths );
-		return paths;
-	}
-
-	@SuppressWarnings("unchecked")
-    private void pathSetShortestPath_facilitate( Node current, Path path, List<Path> paths )
-	{
-		if( current != source )
-		{
-			Node next = null;
-			ArrayList<? extends Edge> parentEdges = (ArrayList<? extends Edge>) current.getAttribute( parentEdgesString );
-			while( current != source && parentEdges.size() == 1 )
-			{
-				Edge e = parentEdges.get( 0 );
-				next = e.getOpposite( current );
-				path.add( current, e );
-				current = next;
-				parentEdges = (ArrayList<? extends Edge>) current.getAttribute( parentEdgesString );
-			}
-			if( current != source )
-			{
-				for( Edge e: parentEdges )
-				{
-					Path p = path.getACopy();
-					p.add( current, e );
-					pathSetShortestPath_facilitate( e.getOpposite( current ), p, paths );
-
-				}
-			}
-		}
-		if( current == source )
-		{
-			paths.add( path );
+			node.removeAttribute(resultAttribute);
 		}
 	}
 
-	/**
-	 * 
-	 * Synonym to {@link #getEdgeSetShortestPaths(Node)}.
-	 * @deprecated
-	 * @see #getEdgeSetShortestPaths(Node)
-	 * @param target The target node for the shortest path.
-	 * @return A list of edges.
-	 */
-	@Deprecated
-	public List<Edge> getShortestPaths( Node target )
-	{
-		return getEdgeSetShortestPaths( target );
-	}
-
-	/**
-	 * Returns a set of edges that compose the shortest path. If more than one
-	 * path is the shortest one, the edges are included in the returned set of
-	 * edges.
-	 * 
-	 * @param target
-	 *            The endpoint of the path to compute from the source node given
-	 *            in the constructor.
-	 * @return The set of edges that belong the the solution. Returns an empty
-	 *         list if the target node is not in the same connected component as
-	 *         the source node. Returns null if target is the same � the source node.
-	 */
-	public List<Edge> getEdgeSetShortestPaths( Node target )
-	{
-		if( target == source )
-		{
-			//System.out.println( "end=source !!!" );
-			return null;
-		}
-		List<Edge> g = new ArrayList<Edge>();
-		Node v = target;
-		facilitate_getShortestPaths( g, v );
-		return g;
-	}
-
-	/**
-	 * Returns the value of the shortest path between the source node and the
-	 * given target according to the attribute specified in the constructor. If
-	 * <code>target</code> is not in the same connected component as the
-	 * source node, then the method returns
-	 * <code>Double.POSITIVE_INFINITY</code>.
-	 * 
-	 * @param target
-	 *            The endpoint of the path to compute from the source node given
-	 *            in the constructor.
-	 * @return A numerical value that represent the distance of the shortest
-	 *         path. 
-	 */
-	public double getShortestPathValue( Node target )
-	{
-		Double d = distances.get( target );
-		if(d!=null)
-			return d;
-		return Double.POSITIVE_INFINITY;
-	}
-
-	/**
-	 * Returns the number of edges in the shortest path from the source to the
-	 * given target.If <code>target</code> is not in the same connected
-	 * component as the source node, then the method returns
-	 * <code>Double.POSITIVE_INFINITY</code>.
-	 * 
-	 * @param target
-	 *            The node to compute the shortest path to.
-	 * @return the number of edges in the shortest path.
-	 */
-	public double getShortestPathLength( Node target )
-	{
-		if ( length.get( target ) ==null)
-			return Double.POSITIVE_INFINITY;
-		return length.get( target );
-	}
-
-	/**
-	 * This enumeration help identifying the kind of element to be used to
-	 * compute the shortest path.
-	 */
-	public static enum Element
-	{
-		edge, node
-	}
+	// *** Methods of Algorithm interface ***
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.graphstream.algorithm.Algorithm#init(org.graphstream.graph.Graph)
+	 * 
+	 * @see
+	 * org.graphstream.algorithm.Algorithm#init(org.graphstream.graph.Graph)
 	 */
-	public void init(Graph graph)
-	{
+	public void init(Graph graph) {
 		this.graph = graph;
 	}
 
 	/**
-	 * Computes the Dijkstra's algorithm on the given graph starting from the
-	 * given source node, considering the given attribute locates on the given
-	 * kind of elements (nodes or edges).
+	 * Computes the shortest paths from the source node to all nodes in the
+	 * graph.
 	 * 
+	 * @throws IllegalStateException
+	 *             if {@link #init(Graph)} or {@link #setSource(Node)} have not
+	 *             been called before or if elements with negative lengths are
+	 *             discovered.
 	 * @see org.graphstream.algorithm.Algorithm#compute()
+	 * @complexity O(<em>m</em> + <em>n</em>log<em>n</em>) where <em>m</em> is
+	 *             the number of edges and <em>n</em> is the number of nodes in
+	 *             the graph.
 	 */
-	@SuppressWarnings("unchecked")
-	public void compute()
-	{
-		distances.clear();
-		length.clear();
-		
-		source = graph.getNode( sourceNodeId );
-		
-		ArrayList<Node> computed = new ArrayList<Node>();
-		
-		double dist;
-		double len;
-		
-		Node runningNode;
-		Node neighborNode;
-		
-		PriorityList<Node> priorityList = new PriorityList<Node>();
-		priorityList.insertion( source, 0.0 );
-		
-		distances.put( source, 0.0 );
-		length.put( source, 0.0 );
+	public void compute() {
+		// check if computation can start
+		if (graph == null)
+			throw new IllegalStateException(
+					"No graph specified. Call init() first.");
+		if (source == null)
+			throw new IllegalStateException(
+					"No source specified. Call setSource() first.");
 
 		// initialization
-
-		for( Node v: graph )
-		{
-			v.removeAttribute( parentEdgesString );
+		FibonacciHeap<Double, Node> heap = new FibonacciHeap<Double, Node>();
+		for (Node node : graph) {
+			Data data = new Data();
+			double v = node == source ? getSourceLength()
+					: Double.POSITIVE_INFINITY;
+			data.fn = heap.add(v, node);
+			data.edgeFromParent = null;
+			node.addAttribute(resultAttribute, data);
 		}
 
-		while( !priorityList.isEmpty() )
-		{
-			runningNode = priorityList.lire( 0 );
-			
-			for( Edge runningEdge: runningNode.getLeavingEdgeSet() )
-			{
-				neighborNode = runningEdge.getOpposite( runningNode );
-
-				if( !computed.contains( neighborNode ) )
-				{
-					double val = 0;
-					if( attribute == null )
-					{
-						val = 1.0;
-					}
-					else
-					{
-						if( element == Element.edge )
-						{
-							val = ( (Number)runningEdge.getAttribute( attribute ) ).doubleValue();
-						}
-						else
-						{
-							val = ( (Number) neighborNode.getAttribute( attribute ) ).doubleValue();
-						}
-					}
-					if( val < 0 )
-					{
-						throw new NumberFormatException( "Attribute \"" + attribute + "\" has a negative value on element "
-								+ ( element == Element.edge ? runningEdge.toString() : neighborNode.toString() ) );
-					}
-					dist = ( distances.get( runningNode ) + val );
-					len = (int) ( length.get( runningNode ) + 1 );
-
-					if( priorityList.containsKey( neighborNode ) )
-					{
-						if( dist <= distances.get( neighborNode ) )
-						{
-							if( dist == distances.get( neighborNode ) )
-							{
-								( (ArrayList<Edge>) neighborNode.getAttribute( parentEdgesString ) ).add( runningEdge );
-							}
-							else
-							{
-								ArrayList<Edge> parentEdges = new ArrayList<Edge>();
-								parentEdges.add( runningEdge );
-								neighborNode.addAttribute( parentEdgesString, parentEdges );
-
-								distances.put( neighborNode, dist );
-								//neighborNode.addAttribute( "label", neighborNode.getId() + " - " + dist );
-								length.put( neighborNode, len );
-
-								priorityList.suppression( neighborNode );
-								priorityList.insertion( neighborNode, dist );
-							}
-						}
-					}
-					else
-					{
-						priorityList.insertion( neighborNode, dist );
-						distances.put( neighborNode, dist );
-						length.put( neighborNode, len );
-						ArrayList<Edge> parentEdges = new ArrayList<Edge>();
-						parentEdges.add( runningEdge );
-						neighborNode.addAttribute( parentEdgesString, parentEdges );
-
-					}
-
+		// main loop
+		while (!heap.isEmpty()) {
+			Node u = heap.extractMin();
+			Data dataU = u.getAttribute(resultAttribute);
+			dataU.distance = dataU.fn.getKey();
+			dataU.fn = null;
+			for (Edge e : u.getEachLeavingEdge()) {
+				Node v = e.getOpposite(u);
+				Data dataV = v.getAttribute(resultAttribute);
+				if (dataV.fn == null)
+					continue;
+				double tryDist = dataU.distance + getLength(e, v);
+				if (tryDist < dataV.fn.getKey()) {
+					dataV.edgeFromParent = e;
+					heap.decreaseKey(dataV.fn, tryDist);
 				}
 			}
-			priorityList.suppression( runningNode );
-			computed.add( runningNode );
 		}
 	}
 
-}
+	// *** Iterators ***
 
-class PriorityList<E>
-{
+	protected class NodeIterator<T extends Node> implements Iterator<T> {
+		protected Node nextNode;
 
-	ArrayList<E> objets;
-
-	ArrayList<Double> priorites;
-
-	int taille;
-
-	public PriorityList()
-	{
-		objets = new ArrayList<E>();
-		priorites = new ArrayList<Double>();
-		taille = 0;
-	}
-
-	public boolean containsKey( E objet )
-	{
-		boolean contient = false;
-		if( objets.contains( objet ) )
-		{
-			contient = true;
+		protected NodeIterator(Node target) {
+			nextNode = Double.isInfinite(getPathLength(target)) ? null : target;
 		}
-		return contient;
+
+		public boolean hasNext() {
+			return nextNode != null;
+		}
+
+		@SuppressWarnings("unchecked")
+		public T next() {
+			if (nextNode == null)
+				throw new NoSuchElementException();
+			Node node = nextNode;
+			nextNode = getParent(nextNode);
+			return (T) node;
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException(
+					"remove is not supported by this iterator");
+		}
 	}
 
-	public void insertion( E element, double prio )
-	{
-		boolean trouve = false;
-		int max = priorites.size();
-		int i = 0;
-		while( ( !trouve ) && ( i < max ) )
-		{
-			if( priorites.get( i ) > prio )
-			{
-				trouve = true;
+	protected class EdgeIterator<T extends Edge> implements Iterator<T> {
+		protected Node nextNode;
+		protected T nextEdge;
+
+		protected EdgeIterator(Node target) {
+			nextNode = target;
+			nextEdge = getEdgeFromParent(nextNode);
+		}
+
+		public boolean hasNext() {
+			return nextEdge != null;
+		}
+
+		public T next() {
+			if (nextEdge == null)
+				throw new NoSuchElementException();
+			T edge = nextEdge;
+			nextNode = getParent(nextNode);
+			nextEdge = getEdgeFromParent(nextNode);
+			return edge;
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException(
+					"remove is not supported by this iterator");
+		}
+	}
+
+	protected class PathIterator implements Iterator<Path> {
+		protected List<Node> nodes;
+		protected List<Iterator<Edge>> iterators;
+		protected Path nextPath;
+
+		protected void extendPathStep() {
+			int last = nodes.size() - 1;
+			Node v = nodes.get(last);
+			double lengthV = getPathLength(v);
+			Iterator<Edge> it = iterators.get(last);
+			while (it.hasNext()) {
+				Edge e = it.next();
+				Node u = e.getOpposite(v);
+				if (getPathLength(u) + getLength(e, v) == lengthV) {
+					nodes.add(u);
+					iterators.add(u.getEnteringEdgeIterator());
+					return;
+				}
 			}
-			else
-			{
-				i++;
+			nodes.remove(last);
+			iterators.remove(last);
+		}
+
+		protected void extendPath() {
+			while (!nodes.isEmpty() && nodes.get(nodes.size() - 1) != source)
+				extendPathStep();
+		}
+
+		protected void constructNextPath() {
+			if (nodes.isEmpty()) {
+				nextPath = null;
+				return;
 			}
+			nextPath = new Path();
+			nextPath.setRoot(source);
+			for (int i = nodes.size() - 1; i > 0; i--)
+				nextPath.add(nodes.get(i).getEdgeToward(
+						nodes.get(i - 1).getId()));
 		}
-		if( i == max )
-		{
-			objets.add( element );
-			priorites.add( prio );
-		}
-		else
-		{
-			objets.add( i, element );
 
-			// MODIF ICI !
-			// priorites.add(prio);
-			priorites.add( i, prio );
+		public PathIterator(Node target) {
+			nodes = new ArrayList<Node>();
+			iterators = new ArrayList<Iterator<Edge>>();
+			if (Double.isInfinite(getPathLength(target))) {
+				nextPath = null;
+				return;
+			}
+			nodes.add(target);
+			iterators.add(target.getEnteringEdgeIterator());
+			extendPath();
+			constructNextPath();
+		}
+
+		public boolean hasNext() {
+			return nextPath != null;
+		}
+
+		public Path next() {
+			if (nextPath == null)
+				throw new NoSuchElementException();
+			nodes.remove(nodes.size() - 1);
+			iterators.remove(iterators.size() - 1);
+			extendPath();
+			Path path = nextPath;
+			constructNextPath();
+			return path;
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException(
+					"remove is not supported by this iterator");
 		}
 	}
 
-	public boolean isEmpty()
-	{
-		boolean vide = false;
-		if( objets.size() == 0 )
-		{
-			vide = true;
+	protected class TreeIterator<T extends Edge> implements Iterator<T> {
+		Iterator<Node> nodeIt;
+		T nextEdge;
+
+		protected void findNextEdge() {
+			nextEdge = null;
+			while (nodeIt.hasNext() && nextEdge == null)
+				nextEdge = getEdgeFromParent(nodeIt.next());
 		}
-		return vide;
-	}
 
-	public E lire( int position )
-	{
-		return objets.get( position );
-	}
-
-	public int size()
-	{
-		return objets.size();
-	}
-
-	public void suppression( E element )
-	{
-		int position = objets.lastIndexOf( element );
-		objets.remove( position );
-		priorites.remove( position );
-	}
-
-	@Override
-	public String toString()
-	{
-		String laliste = new String( " -------- Liste --------- \n" );
-		for( int i = 0; i < objets.size(); i++ )
-		{
-			laliste = laliste + objets.get( i ).toString() + ":::" + priorites.get( i ).toString() + "\n";
+		protected TreeIterator() {
+			nodeIt = graph.getNodeIterator();
+			findNextEdge();
 		}
-		return laliste;
+
+		public boolean hasNext() {
+			return nextEdge != null;
+		}
+
+		public T next() {
+			if (nextEdge == null)
+				throw new NoSuchElementException();
+			T edge = nextEdge;
+			findNextEdge();
+			return edge;
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException(
+					"remove is not supported by this iterator");
+		}
+	}
+
+	// *** Methods to access the solution ***
+
+	/**
+	 * Returns the length of the shortest path from the source node to a given
+	 * target node.
+	 * 
+	 * @param target
+	 *            A node
+	 * @return the length of the shortest path or
+	 *         {@link java.lang.Double#POSITIVE_INFINITY} if there is no path
+	 *         from the source to the target
+	 * @complexity O(1)
+	 */
+	public double getPathLength(Node target) {
+		return target.<Data> getAttribute(resultAttribute).distance;
+	}
+
+	/**
+	 * Dijkstra's algorithm produces a shortest path tree rooted in the source
+	 * node. This method returns the total length of the tree.
+	 * 
+	 * @return the length of the shortest path tree
+	 * @complexity O(<em>n</em>) where <em>n</em> is the number of nodes is the
+	 *             graph.
+	 */
+	public double getTreeLength() {
+		double length = getSourceLength();
+		for (Edge edge : getTreeEdges()) {
+			Node node = edge.getNode0();
+			if (getEdgeFromParent(node) != edge)
+				node = edge.getNode1();
+			length += getLength(edge, node);
+		}
+		return length;
+	}
+
+	/**
+	 * Returns the edge between the target node and the previous node in the
+	 * shortest path from the source to the target. This is also the edge
+	 * connecting the target to its parent in the shortest path tree.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return the edge between the target and its predecessor in the shortest
+	 *         path, {@code null} if there is no path from the source to the
+	 *         target or if the target and the source are the same node.
+	 * @see #getParent(Node)
+	 * @complexity O(1)
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Edge> T getEdgeFromParent(Node target) {
+		return (T) target.<Data> getAttribute(resultAttribute).edgeFromParent;
+	}
+
+	/**
+	 * Returns the node preceding the target in the shortest path from the
+	 * source to the target. This node is the parent of the target in the
+	 * shortest path tree.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return the predecessor of the target in the shortest path, {@code null}
+	 *         if there is no path from the source to the target or if the
+	 *         target and the source are the same node.
+	 * @see #getEdgeFromParent(Node)
+	 * @complexity O(1)
+	 */
+	public <T extends Node> T getParent(Node target) {
+		Edge edge = getEdgeFromParent(target);
+		if (edge == null)
+			return null;
+		return edge.getOpposite(target);
+	}
+
+	/**
+	 * This iterator traverses the nodes on the shortest path from the source
+	 * node to a given target node. The nodes are traversed in reverse order:
+	 * the target node first, then its predecessor, ... and finally the source
+	 * node. If there is no path from the source to the target, no nodes are
+	 * traversed. This iterator does not support
+	 * {@link java.util.Iterator#remove()}.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return an iterator on the nodes of the shortest path from the source to
+	 *         the target
+	 * @see #getPathNodes(Node)
+	 * @complexity Each call of {@link java.util.Iterator#next()} of this
+	 *             iterator takes O(1) time
+	 */
+	public <T extends Node> Iterator<T> getPathNodesIterator(Node target) {
+		return new NodeIterator<T>(target);
+	}
+
+	/**
+	 * An iterable view of the nodes on the shortest path from the source node
+	 * to a given target node. Uses {@link #getPathNodesIterator(Node)}.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return an iterable view of the nodes on the shortest path from the
+	 *         source to the target
+	 * @see #getPathNodesIterator(Node)
+	 */
+	public <T extends Node> Iterable<T> getPathNodes(final Node target) {
+		return new Iterable<T>() {
+			public Iterator<T> iterator() {
+				return getPathNodesIterator(target);
+			}
+		};
+	}
+
+	/**
+	 * This iterator traverses the edges on the shortest path from the source
+	 * node to a given target node. The edges are traversed in reverse order:
+	 * first the edge between the target and its predecessor, ... and finally
+	 * the edge between the source end its successor. If there is no path from
+	 * the source to the target or if he source and the target are the same
+	 * node, no edges are traversed. This iterator does not support
+	 * {@link java.util.Iterator#remove()}.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return an iterator on the edges of the shortest path from the source to
+	 *         the target
+	 * @see #getPathEdges(Node)
+	 * @complexity Each call of {@link java.util.Iterator#next()} of this
+	 *             iterator takes O(1) time
+	 */
+	public <T extends Edge> Iterator<T> getPathEdgesIterator(Node target) {
+		return new EdgeIterator<T>(target);
+	}
+
+	/**
+	 * An iterable view of the edges on the shortest path from the source node
+	 * to a given target node. Uses {@link #getPathEdgesIterator(Node)}.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return an iterable view of the edges on the shortest path from the
+	 *         source to the target
+	 * @see #getPathEdgesIterator(Node)
+	 */
+	public <T extends Edge> Iterable<T> getPathEdges(final Node target) {
+		return new Iterable<T>() {
+			public Iterator<T> iterator() {
+				return getPathEdgesIterator(target);
+			}
+
+		};
+	}
+
+	/**
+	 * This iterator traverses <em>all</em> the shortest paths from the source
+	 * node to a given target node. If there is more than one shortest paths
+	 * between the source and the target, other solution access methods choose
+	 * one of them (the one from the shortest path tree). This iterator can be
+	 * used if one needs to know all the paths. Each call to
+	 * {@link java.util.Iterator#next()} method of this iterator returns a
+	 * shortest path in the form of {@link org.graphstream.graph.Path} object.
+	 * This iterator does not support {@link java.util.Iterator#remove()}.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return an iterator on all the shortest paths from the source to the
+	 *         target
+	 * @see #getAllPaths(Node)
+	 * @complexity Each call of {@link java.util.Iterator#next()} of this
+	 *             iterator takes O(<em>m</em>) time in the worst case, where
+	 *             <em>m</em> is the number of edges in the graph
+	 */
+	public Iterator<Path> getAllPathsIterator(Node target) {
+		return new PathIterator(target);
+	}
+
+	/**
+	 * An iterable view of of <em>all</em> the shortest paths from the source
+	 * node to a given target node. Uses {@link #getAllPathsIterator(Node)}
+	 * 
+	 * @param target
+	 *            a node
+	 * @return an iterable view of all the shortest paths from the source to the
+	 *         target
+	 * @see #getAllPathsIterator(Node)
+	 */
+	public Iterable<Path> getAllPaths(final Node target) {
+		return new Iterable<Path>() {
+			public Iterator<Path> iterator() {
+				return getAllPathsIterator(target);
+			}
+		};
+	}
+
+	/**
+	 * Dijkstra's algorithm produces a shortest path tree rooted in the source
+	 * node. This iterator traverses the edges of this tree. The edges are
+	 * traversed in no particular order.
+	 * 
+	 * @return an iterator on the edges of the shortest path tree
+	 * @see #getTreeEdges()
+	 * @complexity Each call of {@link java.util.Iterator#next()} of this
+	 *             iterator takes O(1) time
+	 */
+	public <T extends Edge> Iterator<T> getTreeEdgesIterator() {
+		return new TreeIterator<T>();
+	}
+
+	/**
+	 * Dijkstra's algorithm produces a shortest path tree rooted in the source
+	 * node. This method provides an iterable view of the edges of this tree.
+	 * Uses {@link #getTreeEdgesIterator()}
+	 * 
+	 * @return an iterable view of the edges of the shortest path tree
+	 * @see #getTreeEdgesIterator()
+	 */
+	public <T extends Edge> Iterable<T> getTreeEdges() {
+		return new Iterable<T>() {
+			public Iterator<T> iterator() {
+				return getTreeEdgesIterator();
+			}
+		};
+	}
+
+	/**
+	 * Returns the shortest path from the source node to a given target node. If
+	 * there is no path from the source to the target returns an empty path.
+	 * This method constructs a {@link org.graphstream.graph.Path} object which
+	 * consumes heap memory proportional to the number of edges and nodes in the
+	 * path. When possible, prefer using {@link #getPathNodes(Node)} and
+	 * {@link #getPathEdges(Node)} which are more memory- and time-efficient.
+	 * 
+	 * @param target
+	 *            a node
+	 * @return the shortest path from the source to the target
+	 * @complexity O(<em>p</em>) where <em>p</em> is the number of the nodes in
+	 *             the path
+	 */
+	public Path getPath(Node target) {
+		Path path = new Path();
+		if (Double.isInfinite(getPathLength(target)))
+			return path;
+		Stack<Edge> stack = new Stack<Edge>();
+		for (Edge e : getPathEdges(target))
+			stack.push(e);
+		path.setRoot(source);
+		while (!stack.isEmpty())
+			path.add(stack.pop());
+		return path;
 	}
 }

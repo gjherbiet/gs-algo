@@ -1,37 +1,49 @@
 /*
- * This file is part of GraphStream.
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
  * 
- * GraphStream is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  * 
- * GraphStream is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with GraphStream.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * Copyright 2006 - 2010
- * 	Julien Baudry
- * 	Antoine Dutot
- * 	Yoann Pigné
- * 	Guilhelm Savin
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
 package org.graphstream.algorithm.generator;
 
 import java.util.ArrayList;
 
 /**
- * Scale-free graph (tree) generator using the preferential attachement rule.
+ * Scale-free tree generator using the preferential attachment rule as
+ * defined in the Barabási-Albert model.
+ * 
+ * <p>
+ * THIS GENERATOR IS DEPRECATED, USE THE {@link BarabasiAlbertGenerator} INSTEAD.
+ * </p>
  * 
  * <p>
  * This is a very simple graph generator that generates a tree using the
- * preferential attachement rule: nodes are generated one by one, and each time
- * attached by an edge to another node that has more chance to choosed if it
- * already has lots of nodes attached to it.
+ * preferential attachment rule defined in the Barabási-Albert model: nodes are
+ * generated one by one, and each time attached by an edge to another node that
+ * has more chance to chosen if it already has lots of nodes attached to it.
  * </p>
  * 
  * <p>
@@ -39,21 +51,24 @@ import java.util.ArrayList;
  * therefore generate trees of any size.
  * </p>
  * 
+ * @reference Albert-László Barabási & Réka Albert
+ *            "Emergence of scaling in random networks". Science 286: 509–512.
+ *            October 1999. doi:10.1126/science.286.5439.509.
+ * 
  * @since 20061128
  */
-public class PreferentialAttachmentGenerator
-	extends BaseGenerator
-{
+@Deprecated
+public class PreferentialAttachmentGenerator extends BaseGenerator {
 	/**
 	 * Degree of each node.
 	 */
 	protected ArrayList<Integer> degrees;
-	
+
 	/**
 	 * Maximal degree at time t.
 	 */
 	protected int degreeMax = 0;
-	
+
 	/**
 	 * Number of edges.
 	 */
@@ -62,82 +77,77 @@ public class PreferentialAttachmentGenerator
 	/**
 	 * New generator.
 	 */
-	public PreferentialAttachmentGenerator()
-	{
+	public PreferentialAttachmentGenerator() {
 		directed = false;
 	}
-	
+
 	/**
 	 * Start the generator. A single node is added.
 	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#begin()
 	 */
-	public void begin()
-	{
-		this.degrees   = new ArrayList<Integer>();
+	public void begin() {
+		this.degrees = new ArrayList<Integer>();
 		this.degreeMax = 0;
-		
-		addNode( "0" );
-		degrees.add( 0 );
+
+		addNode("0");
+		degrees.add(0);
 	}
 
 	/**
 	 * Step of the generator. Add a node and try to connect it with some others.
 	 * 
+	 * The complexity of this method is O(n) with n the number of nodes actually
+	 * in the graph.
+	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#nextEvents()
 	 */
-	public boolean nextEvents()
-	{
+	public boolean nextEvents() {
 		// Generate a new node.
-		
-		int    index = degrees.size();
-		String id    = Integer.toString( index );
-		
-		addNode( id );
-		degrees.add( 0 );
-		
-		// Compute the attachment probability of each previouly added node
-		
+
+		int index = degrees.size();
+		String id = Integer.toString(index);
+
+		addNode(id);
+		degrees.add(0);
+
+		// Compute the attachment probability of each previously added node
+
 		int sumDeg = edgesCount * 2;
-		
+
 		// Choose the node to attach to.
-		
-		float sumProba = 0;
-		float rnd      = (float) Math.random();
-		int   otherIdx = -1;
-		
-		for( int i=0; i<index; ++i )
-		{
-			float proba = sumDeg == 0 ? 1 : ((float)degrees.get( i )) / ((float)sumDeg);
-			
+
+		double sumProba = 0;
+		double rnd = random.nextDouble();
+		int otherIdx = -1;
+
+		for(int i = 0; i < index; ++i) {
+			double proba = sumDeg == 0 ? 1 : degrees.get(i) / ((double) sumDeg);
+
 			sumProba += proba;
-			
-			if( sumProba > rnd )
-			{
+
+			if (sumProba > rnd) {
 				otherIdx = i;
-				break;
+				i = index;// Stop the loop.
 			}
 		}
-		
+
 		// Attach to the other node.
-		
-		if( otherIdx >= 0 )
-		{
-			String oid = Integer.toString( otherIdx );
-			String eid = id +  "_" + oid;
-			
-			addEdge( eid, oid, id );
+
+		if (otherIdx >= 0) {
+			String oid = Integer.toString(otherIdx);
+			String eid = id + "_" + oid;
+
+			addEdge(eid, oid, id);
 			edgesCount++;
-			degrees.set( otherIdx, degrees.get( otherIdx ) + 1 );
-			degrees.set( index, degrees.get( index ) + 1 );
+			degrees.set(otherIdx, degrees.get(otherIdx) + 1);
+			degrees.set(index, degrees.get(index) + 1);
+		} else {
+			System.err.printf("PreferentialAttachmentGenerator: Aieuu!%n");
 		}
-		else
-		{
-			System.err.printf( "PreferentialAttachmentGenerator: Aieuu!%n" );
-		}
-		
+
 		// It is always possible to add an element.
-		
+
 		return true;
 	}
 
@@ -146,10 +156,11 @@ public class PreferentialAttachmentGenerator
 	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#end()
 	 */
-	public void end()
-	{
+	@Override
+	public void end() {
 		degrees.clear();
-		degrees   = null;
+		degrees = null;
 		degreeMax = 0;
+		super.end();
 	}
 }
