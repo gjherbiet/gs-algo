@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -33,13 +32,18 @@ package org.graphstream.algorithm.generator;
 import java.util.ArrayList;
 
 /**
- * Scale-free graph (tree) generator using the preferential attachement rule.
+ * Scale-free tree generator using the preferential attachment rule as
+ * defined in the Barabási-Albert model.
+ * 
+ * <p>
+ * THIS GENERATOR IS DEPRECATED, USE THE {@link BarabasiAlbertGenerator} INSTEAD.
+ * </p>
  * 
  * <p>
  * This is a very simple graph generator that generates a tree using the
- * preferential attachement rule: nodes are generated one by one, and each time
- * attached by an edge to another node that has more chance to choosed if it
- * already has lots of nodes attached to it.
+ * preferential attachment rule defined in the Barabási-Albert model: nodes are
+ * generated one by one, and each time attached by an edge to another node that
+ * has more chance to chosen if it already has lots of nodes attached to it.
  * </p>
  * 
  * <p>
@@ -47,8 +51,13 @@ import java.util.ArrayList;
  * therefore generate trees of any size.
  * </p>
  * 
+ * @reference Albert-László Barabási & Réka Albert
+ *            "Emergence of scaling in random networks". Science 286: 509–512.
+ *            October 1999. doi:10.1126/science.286.5439.509.
+ * 
  * @since 20061128
  */
+@Deprecated
 public class PreferentialAttachmentGenerator extends BaseGenerator {
 	/**
 	 * Degree of each node.
@@ -88,6 +97,9 @@ public class PreferentialAttachmentGenerator extends BaseGenerator {
 	/**
 	 * Step of the generator. Add a node and try to connect it with some others.
 	 * 
+	 * The complexity of this method is O(n) with n the number of nodes actually
+	 * in the graph.
+	 * 
 	 * @see org.graphstream.algorithm.generator.Generator#nextEvents()
 	 */
 	public boolean nextEvents() {
@@ -99,25 +111,24 @@ public class PreferentialAttachmentGenerator extends BaseGenerator {
 		addNode(id);
 		degrees.add(0);
 
-		// Compute the attachment probability of each previouly added node
+		// Compute the attachment probability of each previously added node
 
 		int sumDeg = edgesCount * 2;
 
 		// Choose the node to attach to.
 
-		float sumProba = 0;
-		float rnd = (float) Math.random();
+		double sumProba = 0;
+		double rnd = random.nextDouble();
 		int otherIdx = -1;
 
-		for (int i = 0; i < index; ++i) {
-			float proba = sumDeg == 0 ? 1 : ((float) degrees.get(i))
-					/ ((float) sumDeg);
+		for(int i = 0; i < index; ++i) {
+			double proba = sumDeg == 0 ? 1 : degrees.get(i) / ((double) sumDeg);
 
 			sumProba += proba;
 
 			if (sumProba > rnd) {
 				otherIdx = i;
-				break;
+				i = index;// Stop the loop.
 			}
 		}
 

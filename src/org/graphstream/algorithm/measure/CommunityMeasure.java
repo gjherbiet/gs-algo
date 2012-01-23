@@ -1,12 +1,11 @@
 /*
- * Copyright 2006 - 2011 
- *     Julien Baudry	<julien.baudry@graphstream-project.org>
- *     Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *     Yoann Pigné		<yoann.pigne@graphstream-project.org>
- *     Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- * 
- * This file is part of GraphStream <http://graphstream-project.org>.
- * 
+ * Copyright 2006 - 2012
+ *      Stefan Balev       <stefan.balev@graphstream-project.org>
+ *      Julien Baudry	<julien.baudry@graphstream-project.org>
+ *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
+ *      Yoann Pigné	<yoann.pigne@graphstream-project.org>
+ *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
+ *  
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -76,7 +75,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	/**
 	 * Last value computed.
 	 */
-	protected float M;
+	protected double M;
 
 	/**
 	 * New measure algorithm with a given marker for communities.
@@ -105,7 +104,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @complexity O(1)
 	 * @return The last computed measure.
 	 */
-	public float getLastComputedValue() {
+	public double getLastComputedValue() {
 		return M;
 	}
 
@@ -115,7 +114,7 @@ public abstract class CommunityMeasure extends SinkAdapter implements
 	 * @complexity Depends on the actual measure
 	 * @return The current measure.
 	 */
-	public float getMeasure() {
+	public double getMeasure() {
 		compute();
 		return M;
 	}
